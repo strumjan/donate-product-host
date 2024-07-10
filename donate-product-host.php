@@ -13,6 +13,12 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
+// Use JWT
+require_once plugin_dir_path(__FILE__) . 'jwt/src/JWT.php';
+require_once plugin_dir_path(__FILE__) . 'jwt/src/Key.php';
+use \Firebase\JWT\JWT;
+use \Firebase\JWT\Key;
+
 // Register activation hook
 register_activation_hook(__FILE__, 'dph_activate');
 function dph_activate() {
@@ -72,13 +78,18 @@ function dph_add_admin_menu() {
 }
 
 // Function to generate client key
-function dph_generate_client_key($domain) {
-    $reversed_domain = strrev($domain);
-	$combinedDomain = $domain . $reversed_domain;
+function dph_generate_client_key($client_domain) {
+    $reversed_domain = strrev($client_domain);
+	$combinedDomain = $client_domain . $reversed_domain;
 	$maskedDomain = md5($combinedDomain);
     return $maskedDomain;
-	// za ime na fajlot user_data_{$maskedDomain}.json
 }
+
+// For admin notifications
+if (!session_id()) {
+    session_start();
+}
+
 
 // Admin page callback with tabs
 function dph_admin_page() {
@@ -89,19 +100,83 @@ function dph_admin_page() {
         <h2 class="nav-tab-wrapper">
             <a href="?page=donate-product-host&tab=add_campaign" class="nav-tab <?php echo $tab == 'add_campaign' ? 'nav-tab-active' : ''; ?>"><?php _e('Add New Campaign', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=view_campaigns" class="nav-tab <?php echo $tab == 'view_campaigns' ? 'nav-tab-active' : ''; ?>"><?php _e('View Campaigns', 'donate-product-host'); ?></a>
+            <a href="?page=donate-product-host&tab=settings" class="nav-tab <?php echo $tab == 'settings' ? 'nav-tab-active' : ''; ?>"><?php _e('Settings', 'donate-product-host'); ?></a>
         </h2>
         <div class="tab-content">
             <?php
             if ($tab == 'add_campaign') {
                 dph_add_campaign_page();
-            } else {
+            } elseif ($tab == 'view_campaigns') {
                 dph_view_campaigns_page();
+            } elseif ($tab == 'settings') {
+                dph_settings_page();
             }
             ?>
         </div>
     </div>
     <?php
 }
+
+// Function for settings page
+function dph_settings_page() {
+    ?>
+    <div class="wrap">
+        <h2><?php _e('Settings', 'donate-product-host'); ?></h2>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('dph_settings_group');
+            do_settings_sections('dph-settings');
+            submit_button();
+            ?>
+        </form>
+    </div>
+    <?php
+}
+
+// Register settings
+add_action('admin_init', 'dph_register_settings');
+function dph_register_settings() {
+    register_setting('dph_settings_group', 'dph_secret_key');
+    register_setting('dph_settings_group', 'dph_host_email');
+
+    add_settings_section(
+        'dph_settings_section',
+        __('Main Settings', 'donate-product-host'),
+        'dph_settings_section_callback',
+        'dph-settings'
+    );
+
+    add_settings_field(
+        'dph_secret_key',
+        __('Secret Key', 'donate-product-host'),
+        'dph_secret_key_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
+
+    add_settings_field(
+        'dph_host_email',
+        __('Host email', 'donate-product-host'),
+        'dph_host_email_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
+}
+
+function dph_settings_section_callback() {
+    echo __('Configure the main settings for the Donate Product Host plugin.', 'donate-product-host');
+}
+
+function dph_secret_key_callback() {
+    $secret_key = get_option('dph_secret_key');
+    echo '<input type="text" id="dph_secret_key" name="dph_secret_key" value="' . esc_attr($secret_key) . '" />';
+}
+
+function dph_host_email_callback() {
+    $host_email = get_option('dph_host_email');
+    echo '<input type="text" id="dph_host_email" name="dph_host_email" value="' . esc_attr($host_email) . '" />';
+}
+
 
 // Function to display add campaign form
 function dph_add_campaign_page() {
@@ -114,11 +189,18 @@ function dph_add_campaign_page() {
         $client_email = sanitize_email($_POST['client_email']);
         $product_id = intval($_POST['product_id']);
         $product = wc_get_product($product_id);
+        $secret_key = get_option('dph_secret_key');
+        $payload_key = dph_generate_client_key($client_domain);
+        $payload = array(
+            'payload_key' => $payload_key,
+            'client_domain' => $client_domain
+        );
         
         if ($product) {
             $product_price = $product->get_price();
             $required_quantity = intval($_POST['required_quantity']);
-            $client_key = dph_generate_client_key($client_domain);
+            $client_key = dph_generate_jwt($payload, $secret_key);
+            $client_email = get_option('dph_host_email');
 
             $wpdb->insert(
                 $table_name,
@@ -138,10 +220,12 @@ function dph_add_campaign_page() {
                 'product_id' => $product_id,
                 'product_price' => $product_price,
                 'required_quantity' => $required_quantity,
+                'client_email' => $client_email,
             ];
 
             $client_domain_filename = str_replace('.', '_', $client_domain);
-            $json_filename = "{$client_domain_filename}_{$client_key}.json";
+            $client_key_short = substr($client_key, 0, 8);
+            $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
 
             // Define the path to the campaigns folder
             $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
@@ -152,10 +236,21 @@ function dph_add_campaign_page() {
             $json_file_path = $campaigns_folder . '/' . $json_filename;
             file_put_contents($json_file_path, json_encode($json_data));
 
-            echo '<div class="notice notice-success is-dismissible"><p>' . __('Client and campaign added successfully!', 'donate-product-host') . '</p></div>';
+            // Add success notice
+            $_SESSION['dph_admin_notices'] = [
+                'type' => 'success',
+                'message' => __('Client and campaign added successfully!', 'donate-product-host')
+            ];
         } else {
-            echo '<div class="notice notice-error is-dismissible"><p>' . __('Invalid Product ID!', 'donate-product-host') . '</p></div>';
+            // Add error notice
+            $_SESSION['dph_admin_notices'] = [
+                'type' => 'error',
+                'message' => __('Invalid Product ID!', 'donate-product-host')
+            ];
         }
+        // Redirect to clear the form and display the notice
+        wp_redirect(add_query_arg('tab', 'add_campaign', admin_url('admin.php?page=donate-product-host')));
+        exit;
     }
 
     ?>
@@ -186,6 +281,38 @@ function dph_add_campaign_page() {
     </form>
     <?php
 }
+
+// Admin notifications
+function dph_admin_notices() {
+    if (isset($_SESSION['dph_admin_notices'])) {
+        $notice = $_SESSION['dph_admin_notices'];
+        ?>
+        <div class="notice notice-<?php echo esc_attr($notice['type']); ?> is-dismissible">
+            <p><?php echo esc_html($notice['message']); ?></p>
+        </div>
+        <?php
+        // Clear the notice after displaying it
+        unset($_SESSION['dph_admin_notices']);
+    }
+
+    // Check for settings-updated parameter
+    if (isset($_GET['settings-updated'])) {
+        if ($_GET['settings-updated'] == 'true') {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php _e('Settings saved successfully!', 'donate-product-host'); ?></p>
+            </div>
+            <?php
+        } else {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php _e('Settings not saved.', 'donate-product-host'); ?></p>
+            </div>
+            <?php
+        }
+    }
+}
+add_action('admin_notices', 'dph_admin_notices');
 
 // Function to display list of campaigns
 function dph_view_campaigns_page() {
@@ -230,5 +357,74 @@ function dph_view_campaigns_page() {
         echo '<p>' . __('No campaigns found.', 'donate-product-host') . '</p>';
     }
 }
-// Additional functions for managing the plugin logic will be added here...
 
+// Генерирање и проверка на JWT токенот
+
+function dph_generate_jwt($payload, $secret_key) {
+    return JWT::encode($payload, $secret_key, 'HS256');
+}
+
+function dph_verify_jwt($jwt, $secret_key) {
+    try {
+        $decoded = JWT::decode($jwt, new Key($secret_key, 'HS256'));
+        return (array) $decoded;
+    } catch (Exception $e) {
+        //error_log('JWT verification failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+// REST API for update JSON
+// Register the REST API route
+add_action('rest_api_init', function () {
+    register_rest_route('donate-product-host/v1', '/update_quantity', array(
+        'methods' => 'POST',
+        'callback' => 'dph_update_campaign_quantity',
+        'permission_callback' => '__return_true'
+    ));
+});
+
+// Callback function to update the quantity
+function dph_update_campaign_quantity(WP_REST_Request $request) {
+    //error_log("dph_update_campaign_quantity executed.");
+    global $wpdb;
+    $params = $request->get_json_params();
+    $secret_key = get_option('dph_secret_key');
+    $jwt_token = $request->get_header('Authorization');
+    $jwt_token = str_replace('Bearer ', '', $jwt_token);
+
+    if (!dph_verify_jwt($jwt_token, $secret_key)) {
+        //error_log("Invalid JWT token.");
+        return new WP_Error('invalid_token', 'Invalid JWT token', array('status' => 401));
+    }
+
+    $client_domain = sanitize_text_field($params['client_domain']);
+    $client_domain_base = str_replace('_', '.', $client_domain);
+    $table_name = $wpdb->prefix . 'dph_clients';
+    $query = $wpdb->prepare("SELECT client_key FROM $table_name WHERE client_domain = %s", $client_domain_base);
+    $client_key = $wpdb->get_var($query);//error_log('Ova e od bazata: '.$client_key);
+    //$client_key = sanitize_text_field($params['client_key']);
+    $donated_quantity = intval($params['donated_quantity']);
+    $client_key_short = substr($client_key, 0, 8);
+
+    $file_path = plugin_dir_path(__FILE__) . "campaigns/{$client_domain}_{$client_key_short}.json";
+
+    if (!file_exists($file_path)) {
+        //error_log("Campaign file not found: " . $file_path);
+        return new WP_Error('file_not_found', 'Campaign file not found', array('status' => 404));
+    }
+
+    $campaign_data = json_decode(file_get_contents($file_path), true);
+
+    if ($campaign_data === null) {
+        //error_log("Invalid JSON file: " . $file_path);
+        return new WP_Error('invalid_json', 'Invalid JSON file', array('status' => 500));
+    }
+
+    $campaign_data['required_quantity'] = max(0, intval($campaign_data['required_quantity']) - $donated_quantity);
+    file_put_contents($file_path, json_encode($campaign_data));
+
+    //error_log("Quantity updated successfully for " . $client_domain . "_" . $client_key);
+
+    return rest_ensure_response(array('success' => true, 'new_required_quantity' => $campaign_data['required_quantity']));
+}
