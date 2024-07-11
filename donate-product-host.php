@@ -138,6 +138,8 @@ add_action('admin_init', 'dph_register_settings');
 function dph_register_settings() {
     register_setting('dph_settings_group', 'dph_secret_key');
     register_setting('dph_settings_group', 'dph_host_email');
+    register_setting('dph_settings_group', 'dph_at_self');
+    register_setting('dph_settings_group', 'dph_product_id_at_self');
 
     add_settings_section(
         'dph_settings_section',
@@ -161,6 +163,22 @@ function dph_register_settings() {
         'dph-settings',
         'dph_settings_section'
     );
+
+    add_settings_field(
+        'dph_at_self',
+        __('Donate at self', 'donate-product-host'),
+        'dph_at_self_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
+
+    add_settings_field(
+        'dph_product_id_at_self',
+        __('Product ID to donate at self', 'donate-product-host'),
+        'dph_product_id_at_self_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
 }
 
 function dph_settings_section_callback() {
@@ -177,6 +195,37 @@ function dph_host_email_callback() {
     echo '<input type="text" id="dph_host_email" name="dph_host_email" value="' . esc_attr($host_email) . '" />';
 }
 
+function dph_at_self_callback() {
+    $at_self = get_option('dph_at_self');
+    $checked = $at_self ? 'checked' : '';
+    echo '<input type="checkbox" id="dph_at_self" name="dph_at_self" value="1" ' . $checked . ' />';
+}
+
+function dph_product_id_at_self_callback() {
+    $product_id_at_self = get_option('dph_product_id_at_self');
+    echo '<input type="text" id="dph_product_id_at_self" name="dph_product_id_at_self" value="' . esc_attr($product_id_at_self) . '" />';
+}
+
+function dph_admin_script() {
+    ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            function toggleProductIDField() {
+                if ($('#dph_at_self').is(':checked')) {
+                    $('#dph_product_id_at_self').closest('tr').show();
+                } else {
+                    $('#dph_product_id_at_self').closest('tr').hide();
+                }
+            }
+            toggleProductIDField();
+            $('#dph_at_self').change(function() {
+                toggleProductIDField();
+            });
+        });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'dph_admin_script');
 
 // Function to display add campaign form
 function dph_add_campaign_page() {
@@ -427,4 +476,96 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
     //error_log("Quantity updated successfully for " . $client_domain . "_" . $client_key);
 
     return rest_ensure_response(array('success' => true, 'new_required_quantity' => $campaign_data['required_quantity']));
+}
+
+// Add a checkbox to the checkout page
+add_action('woocommerce_review_order_before_order_total', 'dph_add_donation_checkbox');
+
+function dph_add_donation_checkbox() {
+    if (get_option('dph_at_self')) {
+        $product_id = get_option('dph_product_id_at_self');
+        $product = wc_get_product($product_id);
+        $product_name = $product ->get_name();
+        $product_price = $product->get_price();
+        $max_quantity = $product->get_stock_status();
+        if ($max_quantity == 'instock') {
+            echo '<tr class="donation_product">
+                    <th>' . esc_html($product_name) . '</th>
+                    <td>
+                        <input type="checkbox" id="add_donation_product" name="add_donation_product" onchange="checkboxAction();" value="' . esc_attr($product_id) . '" data-price="' . esc_attr($product_price) . '">
+                        <input type="number" id="donation_product_quantity" name="donation_product_quantity" onchange="updateTotal();" min="1" max="' . esc_attr($max_quantity) . '" value="1" style="width: 60px; margin-left: 10px;" disabled>
+                        ' . wc_price($product_price) . '
+                    </td>
+                  </tr>';
+        }
+    }
+}
+
+// Enqueue the script for adding donation product price in total
+add_action('wp_enqueue_scripts', 'dph_enqueue_scripts');
+
+function dph_enqueue_scripts() {
+    if (is_checkout()) {
+        wp_enqueue_script('dph_donation_product', plugins_url('/dph-donation-product.js', __FILE__), array('jquery'), null, true);
+        wp_localize_script('dph_donation_product', 'wc_price_params', array(
+            'currency_format_num_decimals' => get_option('woocommerce_price_num_decimals'),
+            'currency_format_symbol'       => get_woocommerce_currency_symbol()
+        ));
+    }
+}
+
+// At self add donate product in order
+add_action('woocommerce_checkout_create_order', 'dph_add_donation_product_to_order', 20, 1);
+
+function dph_add_donation_product_to_order($order) {
+    //if (get_option('dph_at_self') && isset($_POST['donation_product_checkbox'])) {
+    if (isset($_POST['add_donation_product']) && $_POST['add_donation_product']) {
+        $product_id = get_option('dph_product_id_at_self');
+        $product = wc_get_product($product_id);
+        $product_quantity = isset($_POST['donation_product_quantity']) ? intval($_POST['donation_product_quantity']) : 1;
+
+        if ($product) {
+            $product_name = $product ->get_name();;
+            $product_price = floatval($product->get_price());
+
+            // Create a new order item for the donation product
+            $item = new WC_Order_Item_Product();
+            $item->set_product_id($product_id);
+            $item->set_name($product_name);
+            $item->set_quantity($product_quantity);
+            $item->set_total($product_price * $product_quantity);
+            $item->add_meta_data('_donation_product', 'yes', true);
+            $item->add_meta_data('_donation_product_quantity', sanitize_text_field($_POST['donation_product_quantity']), true);
+
+            // Add the item to the order
+            $order->add_item($item);
+        }
+    }
+}
+
+// At self add donation product to order as a fee
+add_action('woocommerce_cart_calculate_fees', 'dph_add_donation_product_to_cart');
+
+function dph_add_donation_product_to_cart() {
+    //if (get_option('dph_at_self') && isset($_POST['donation_product_checkbox'])) {
+    if (isset($_POST['add_donation_product']) && !empty($_POST['add_donation_product'])) {
+        $product_id = get_option('dph_product_id_at_self');
+        $quantity = isset($_POST['donation_product_quantity']) ? intval($_POST['donation_product_quantity']) : 1;
+        $product = wc_get_product($product_id);
+
+        if ($product) {
+            $product_price = $product->get_price();
+            WC()->cart->add_fee($product->get_name(), $product_price * $quantity);
+        }
+    }
+}
+
+
+// At self hook into WooCommerce order placement
+//add_action('woocommerce_thankyou', 'dph_handle_order_placement');
+
+function dph_handle_order_placement($order_id) {
+    if (get_option('dph_at_self')) {
+
+    }
 }
