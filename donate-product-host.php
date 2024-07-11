@@ -249,7 +249,8 @@ function dph_add_campaign_page() {
             $product_price = $product->get_price();
             $required_quantity = intval($_POST['required_quantity']);
             $client_key = dph_generate_jwt($payload, $secret_key);
-            $client_email = get_option('dph_host_email');
+            $host_email = get_option('dph_host_email');
+            $host_checkout_page = wc_get_checkout_url().'?add-to-cart=';
 
             $wpdb->insert(
                 $table_name,
@@ -269,7 +270,8 @@ function dph_add_campaign_page() {
                 'product_id' => $product_id,
                 'product_price' => $product_price,
                 'required_quantity' => $required_quantity,
-                'client_email' => $client_email,
+                'host_email' => $host_email,
+                'host_checkout_page' => $host_checkout_page,
             ];
 
             $client_domain_filename = str_replace('.', '_', $client_domain);
