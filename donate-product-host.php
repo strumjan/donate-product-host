@@ -55,7 +55,7 @@ function dph_create_table() {
         json_downloads mediumint(9) DEFAULT 0,
         total_amount decimal(10, 2) DEFAULT 0,
         start_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        client_key varchar(255) NOT NULL,
+        client_key varchar(512) NOT NULL,
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -241,63 +241,86 @@ function dph_add_campaign_page() {
         $secret_key = get_option('dph_secret_key');
         $payload_key = dph_generate_client_key($client_domain);
         $payload = array(
+            'campaign_name' => $campaign_name,
             'payload_key' => $payload_key,
             'client_domain' => $client_domain
         );
-        
-        if ($product) {
-            $product_price = $product->get_price();
-            $required_quantity = intval($_POST['required_quantity']);
-            $client_key = dph_generate_jwt($payload, $secret_key);
-            $host_email = get_option('dph_host_email');
-            $host_checkout_page = wc_get_checkout_url().'?add-to-cart=';
 
-            $wpdb->insert(
-                $table_name,
-                [
-                    'campaign_name' => $campaign_name,
-                    'client_domain' => $client_domain,
-                    'client_email' => $client_email,
-                    'product_id' => $product_id,
-                    'product_price' => $product_price,
-                    'required_quantity' => $required_quantity,
-                    'client_key' => $client_key,
-                ]
-            );
-			// Create JSON file for the client
-            $json_data = [
-                'campaign_name' => $campaign_name,
-                'product_id' => $product_id,
-                'product_price' => $product_price,
-                'required_quantity' => $required_quantity,
-                'host_email' => $host_email,
-                'host_checkout_page' => $host_checkout_page,
-            ];
+        // Check if the client_domain and campaign_name already exist
+        $existing_campaign = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+                $client_domain, $campaign_name
+            )
+        );
 
-            $client_domain_filename = str_replace('.', '_', $client_domain);
-            $client_key_short = substr($client_key, 0, 8);
-            $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
-
-            // Define the path to the campaigns folder
-            $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
-            if (!file_exists($campaigns_folder)) {
-                mkdir($campaigns_folder, 0755, true);
-            }
-
-            $json_file_path = $campaigns_folder . '/' . $json_filename;
-            file_put_contents($json_file_path, json_encode($json_data));
-
-            // Add success notice
-            $_SESSION['dph_admin_notices'] = [
-                'type' => 'success',
-                'message' => __('Client and campaign added successfully!', 'donate-product-host')
-            ];
-        } else {
+        if ($existing_campaign > 0) {
             // Add error notice
             $_SESSION['dph_admin_notices'] = [
                 'type' => 'error',
-                'message' => __('Invalid Product ID!', 'donate-product-host')
+                'message' => __('Campaign with this name already exists for this client domain!', 'donate-product-host')
             ];
+        } else {
+            if ($product) {
+                $product_price = $product->get_price();
+                $required_quantity = intval($_POST['required_quantity']);
+                $client_key = dph_generate_jwt($payload, $secret_key);
+                $host_email = get_option('dph_host_email');
+                $host_checkout_page = wc_get_checkout_url().'?add-to-cart=';
+
+                $wpdb->insert(
+                    $table_name,
+                    [
+                        'campaign_name' => $campaign_name,
+                        'client_domain' => $client_domain,
+                        'client_email' => $client_email,
+                        'product_id' => $product_id,
+                        'product_price' => $product_price,
+                        'required_quantity' => $required_quantity,
+                        'client_key' => $client_key,
+                    ]
+                );
+
+                // Create JSON file for the client
+                $json_data = [
+                    'campaign_name' => $campaign_name,
+                    'product_id' => $product_id,
+                    'product_price' => $product_price,
+                    'required_quantity' => $required_quantity,
+                    'host_email' => $host_email,
+                    'host_checkout_page' => $host_checkout_page,
+                ];
+
+                $client_domain_filename = str_replace('.', '_', $client_domain);
+                // Split the JWT into its three parts
+                list($header, $payload, $signature) = explode('.', $client_key);
+
+                // Get the first 8 characters of the signature directly
+                $client_key_short = substr($signature, 0, 8);
+
+                $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
+
+                // Define the path to the campaigns folder
+                $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
+                if (!file_exists($campaigns_folder)) {
+                    mkdir($campaigns_folder, 0755, true);
+                }
+
+                $json_file_path = $campaigns_folder . '/' . $json_filename;
+                file_put_contents($json_file_path, json_encode($json_data));
+
+                // Add success notice
+                $_SESSION['dph_admin_notices'] = [
+                    'type' => 'success',
+                    'message' => __('Client and campaign added successfully!', 'donate-product-host')
+                ];
+            } else {
+                // Add error notice
+                $_SESSION['dph_admin_notices'] = [
+                    'type' => 'error',
+                    'message' => __('Invalid Product ID!', 'donate-product-host')
+                ];
+            }
         }
         // Redirect to clear the form and display the notice
         wp_redirect(add_query_arg('tab', 'add_campaign', admin_url('admin.php?page=donate-product-host')));
@@ -332,6 +355,7 @@ function dph_add_campaign_page() {
     </form>
     <?php
 }
+
 
 // Admin notifications
 function dph_admin_notices() {
@@ -399,7 +423,10 @@ function dph_view_campaigns_page() {
             echo '<td>' . esc_html($campaign->donated_quantity) . '</td>';
             echo '<td>' . esc_html($campaign->total_amount) . '</td>';
             echo '<td>' . esc_html($campaign->start_date) . '</td>';
-			echo '<td>' . esc_html($campaign->client_key) . '</td>';
+			echo '<td>
+            <span class="client-key-short">' . esc_html(substr($campaign->client_key, 0, 8)) . '...</span>
+            <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
+            </td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -407,6 +434,23 @@ function dph_view_campaigns_page() {
     } else {
         echo '<p>' . __('No campaigns found.', 'donate-product-host') . '</p>';
     }
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButtons = document.querySelectorAll('.copy-client-key');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const clientKey = this.getAttribute('data-client-key');
+                navigator.clipboard.writeText(clientKey).then(function() {
+                    alert('Client key copied to clipboard');
+                }, function() {
+                    alert('Failed to copy client key');
+                });
+            });
+        });
+    });
+    </script>
+    <?php
 }
 
 // Генерирање и проверка на JWT токенот
@@ -451,12 +495,40 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
 
     $client_domain = sanitize_text_field($params['client_domain']);
     $client_domain_base = str_replace('_', '.', $client_domain);
+    $campaign_name = sanitize_text_field($params['campaign_name']);
     $table_name = $wpdb->prefix . 'dph_clients';
-    $query = $wpdb->prepare("SELECT client_key FROM $table_name WHERE client_domain = %s", $client_domain_base);
+    $query = $wpdb->prepare(
+        "SELECT client_key FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    );
     $client_key = $wpdb->get_var($query);//error_log('Ova e od bazata: '.$client_key);
     //$client_key = sanitize_text_field($params['client_key']);
     $donated_quantity = intval($params['donated_quantity']);
-    $client_key_short = substr($client_key, 0, 8);
+    // Split the JWT into its three parts
+    list($header, $payload, $signature) = explode('.', $client_key);
+
+    // Get the first 8 characters of the signature directly
+    $client_key_short = substr($signature, 0, 8);
+    // Читање на `required_quantity`
+    //$required_quantity = $wpdb->get_var($wpdb->prepare( 
+      //  "SELECT required_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+      //  $client_domain_base,
+      //  $campaign_name
+    //));
+    $required_quantity = intval($params['required_quantity']);
+    $old_donated_quantity = $wpdb->get_var($wpdb->prepare( 
+        "SELECT donated_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    ));
+    //error_log("Old Donated Quantiy e: ".$old_donated_quantity);
+    //error_log('Requires Quantity e: '.$required_quantity);
+    $product_price = floatval($wpdb->get_var($wpdb->prepare( 
+        "SELECT product_price FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    )));
 
     $file_path = plugin_dir_path(__FILE__) . "campaigns/{$client_domain}_{$client_key_short}.json";
 
@@ -472,12 +544,41 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
         return new WP_Error('invalid_json', 'Invalid JSON file', array('status' => 500));
     }
 
+    // Ажурирање на базата
+    if ($required_quantity !== null) {
+        //if ($old_donated_quantity === '0') {
+          //  $new_donated_quantity = $required_quantity - $donated_quantity;
+        //} else {
+        //    $new_donated_quantity = $old_donated_quantity - $donated_quantity;
+        //}
+        $new_donated_quantity = $old_donated_quantity + $donated_quantity;
+        $quantity_difference = $required_quantity - $donated_quantity;
+        //$total_amount = floatval($quantity_difference * $product_price);
+        $total_amount = floatval($new_donated_quantity * $product_price);
+        $total_amount_formatted = number_format($total_amount, 2, '.', '');
+        $wpdb->update(
+            $table_name,
+            array(
+                'donated_quantity' => $new_donated_quantity,
+                'total_amount' => $total_amount_formatted,
+                'required_quantity' => $quantity_difference
+            ),
+            array(
+                'client_domain' => $client_domain_base,
+                'campaign_name' => $campaign_name
+            ),
+            array('%d', '%f'),
+            array('%s', '%s')
+        );
+    }
+
     $campaign_data['required_quantity'] = max(0, intval($campaign_data['required_quantity']) - $donated_quantity);
     file_put_contents($file_path, json_encode($campaign_data));
 
     //error_log("Quantity updated successfully for " . $client_domain . "_" . $client_key);
 
     return rest_ensure_response(array('success' => true, 'new_required_quantity' => $campaign_data['required_quantity']));
+
 }
 
 // Add a checkbox to the checkout page
