@@ -1,0 +1,274 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Donate Product Host\n"
+"POT-Creation-Date: 2024-07-23 08:22+0200\n"
+"PO-Revision-Date: 2024-07-22 20:48+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4.4\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-SearchPath-0: donate-product-host.php\n"
+
+#: donate-product-host.php:70 donate-product-host.php:71
+#: donate-product-host.php:99
+msgid "Donate Product Host"
+msgstr ""
+
+#: donate-product-host.php:101
+msgid "Add New Campaign"
+msgstr ""
+
+#: donate-product-host.php:102
+msgid "View Campaigns"
+msgstr ""
+
+#: donate-product-host.php:103 donate-product-host.php:150
+msgid "Settings"
+msgstr ""
+
+#: donate-product-host.php:104
+msgid "About"
+msgstr ""
+
+#: donate-product-host.php:126
+msgid "About Donate Product Host"
+msgstr ""
+
+#: donate-product-host.php:127
+msgid ""
+"The Donate Product Host plugin is designed to facilitate the management and "
+"tracking of donation campaigns for websites using WooCommerce. This plugin "
+"enables the creation and management of campaigns, with a virtual product "
+"used as the donation item."
+msgstr ""
+
+#: donate-product-host.php:129
+msgid "Key Features:"
+msgstr ""
+
+#: donate-product-host.php:131
+msgid "Campaign Management:"
+msgstr ""
+
+#: donate-product-host.php:131
+msgid ""
+"Administrators can create multiple donation campaigns, each associated with "
+"a specific domain and product. Each campaign can track required and donated "
+"quantities, ensuring transparent and accurate management of donations."
+msgstr ""
+
+#: donate-product-host.php:132
+msgid "Client Integration:"
+msgstr ""
+
+#: donate-product-host.php:132
+msgid ""
+"Each campaign generates a unique client key and corresponding JSON file that "
+"can be used by client websites to integrate with the host's donation system."
+msgstr ""
+
+#: donate-product-host.php:133
+msgid "WooCommerce Compatibility:"
+msgstr ""
+
+#: donate-product-host.php:133
+msgid ""
+"Seamlessly integrates with WooCommerce to create virtual products used for "
+"donations, ensuring compatibility and ease of use within the WooCommerce "
+"ecosystem."
+msgstr ""
+
+#: donate-product-host.php:134
+msgid "Security and Validation:"
+msgstr ""
+
+#: donate-product-host.php:134
+msgid ""
+"Utilizes JWT (JSON Web Tokens) for secure generation and validation of "
+"client keys, ensuring that only authorized campaigns and clients can "
+"communicate with the system."
+msgstr ""
+
+#: donate-product-host.php:135
+msgid "Customizable Campaign Details:"
+msgstr ""
+
+#: donate-product-host.php:135
+msgid ""
+"Administrators can specify the campaign name, client domain, client email, "
+"product ID, and required quantity for each campaign. The plugin also "
+"supports updating and managing quantities and total donation amounts."
+msgstr ""
+
+#: donate-product-host.php:136
+msgid "User-Friendly Interface:"
+msgstr ""
+
+#: donate-product-host.php:136
+msgid ""
+"Provides an intuitive and easy-to-use interface for creating and managing "
+"campaigns, with detailed tables displaying all relevant information for each "
+"campaign."
+msgstr ""
+
+#: donate-product-host.php:139
+msgid ""
+"By leveraging these features, the Donate Product Host plugin provides a "
+"robust solution for managing donation campaigns, ensuring that "
+"administrators have the tools they need to effectively track and manage "
+"their donation products within WooCommerce."
+msgstr ""
+
+#: donate-product-host.php:172
+msgid "Main Settings"
+msgstr ""
+
+#: donate-product-host.php:179
+msgid "Secret Key"
+msgstr ""
+
+#: donate-product-host.php:187
+msgid "Host email"
+msgstr ""
+
+#: donate-product-host.php:195
+msgid "Donate at self"
+msgstr ""
+
+#: donate-product-host.php:203
+msgid "Product ID to donate at self"
+msgstr ""
+
+#: donate-product-host.php:211
+msgid "Configure the main settings for the Donate Product Host plugin."
+msgstr ""
+
+#: donate-product-host.php:217
+msgid "Set a secret key to ensure the security of sharing data with customers."
+msgstr ""
+
+#: donate-product-host.php:218
+msgid "Never share this secret key with customers!"
+msgstr ""
+
+#: donate-product-host.php:224
+msgid ""
+"Set up an email address where you want to receive donation notifications."
+msgstr ""
+
+#: donate-product-host.php:231
+msgid ""
+"Check if you want to include a donation product on your website as well."
+msgstr ""
+
+#: donate-product-host.php:291
+msgid "Campaign with this name already exists for this client domain!"
+msgstr ""
+
+#: donate-product-host.php:345
+msgid "Client and campaign added successfully!"
+msgstr ""
+
+#: donate-product-host.php:351
+msgid "Invalid Product ID!"
+msgstr ""
+
+#: donate-product-host.php:364 donate-product-host.php:433
+msgid "Campaign Name"
+msgstr ""
+
+#: donate-product-host.php:365
+msgid ""
+"Set a campaign title to display on the donor page instead of your actual "
+"product name. The title is associated with the customer's domain and cannot "
+"be used multiple times for the same domain. But the same title can be used "
+"for different domains."
+msgstr ""
+
+#: donate-product-host.php:365
+msgid ""
+"For example, you donate a product \"low-stemmed plant\" and the title of the "
+"campaign can be \"Landscaping for a kindergarten\". Or you donate a "
+"\"Juicer\" product and the title of the campaign can be \"Equipping a "
+"kitchen for a school\"."
+msgstr ""
+
+#: donate-product-host.php:368 donate-product-host.php:434
+msgid "Client Domain"
+msgstr ""
+
+#: donate-product-host.php:369
+msgid ""
+"Enter the domain of the donor site that should show the donation product to "
+"its site. Set it to example.com format."
+msgstr ""
+
+#: donate-product-host.php:372 donate-product-host.php:435
+msgid "Client Email"
+msgstr ""
+
+#: donate-product-host.php:373
+msgid "Set up a customer email to contact for the relevant campaign."
+msgstr ""
+
+#: donate-product-host.php:376 donate-product-host.php:436
+msgid "Product ID"
+msgstr ""
+
+#: donate-product-host.php:377
+msgid "Enter the ID of the product you intend to donate through this campaign."
+msgstr ""
+
+#: donate-product-host.php:380 donate-product-host.php:438
+msgid "Required Quantity"
+msgstr ""
+
+#: donate-product-host.php:381
+msgid "Enter the amount of donated products after which the campaign will end."
+msgstr ""
+
+#: donate-product-host.php:384
+msgid "Add Campaign"
+msgstr ""
+
+#: donate-product-host.php:408
+msgid "Settings saved successfully!"
+msgstr ""
+
+#: donate-product-host.php:414
+msgid "Settings not saved."
+msgstr ""
+
+#: donate-product-host.php:437
+msgid "Product Price"
+msgstr ""
+
+#: donate-product-host.php:439
+msgid "Donated Quantity"
+msgstr ""
+
+#: donate-product-host.php:440
+msgid "Total Amount"
+msgstr ""
+
+#: donate-product-host.php:441
+msgid "Start Date"
+msgstr ""
+
+#: donate-product-host.php:442
+msgid "Client key"
+msgstr ""
+
+#: donate-product-host.php:459
+msgid "Copy"
+msgstr ""
+
+#: donate-product-host.php:466
+msgid "No campaigns found."
+msgstr ""

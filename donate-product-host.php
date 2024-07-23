@@ -101,6 +101,7 @@ function dph_admin_page() {
             <a href="?page=donate-product-host&tab=add_campaign" class="nav-tab <?php echo $tab == 'add_campaign' ? 'nav-tab-active' : ''; ?>"><?php _e('Add New Campaign', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=view_campaigns" class="nav-tab <?php echo $tab == 'view_campaigns' ? 'nav-tab-active' : ''; ?>"><?php _e('View Campaigns', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=settings" class="nav-tab <?php echo $tab == 'settings' ? 'nav-tab-active' : ''; ?>"><?php _e('Settings', 'donate-product-host'); ?></a>
+            <a href="?page=donate-product-host&tab=about" class="nav-tab <?php echo $tab == 'about' ? 'nav-tab-active' : ''; ?>"><?php _e('About', 'donate-product-host'); ?></a>
         </h2>
         <div class="tab-content">
             <?php
@@ -110,9 +111,34 @@ function dph_admin_page() {
                 dph_view_campaigns_page();
             } elseif ($tab == 'settings') {
                 dph_settings_page();
+            } elseif ($tab == 'about') {
+                dph_about_page();
             }
             ?>
         </div>
+    </div>
+    <?php
+}
+
+function dph_about_page() {
+    ?>
+    <div class="wrap">
+    <h2><?php _e('About Donate Product Host', 'donate-product-host'); ?></h2>
+    <p><?php _e('The Donate Product Host plugin is designed to facilitate the management and tracking of donation campaigns for websites using WooCommerce. This plugin enables the creation and management of campaigns, with a virtual product used as the donation item.', 'donate-product-host'); ?></p>
+
+    <h3><?php _e('Key Features:', 'donate-product-host'); ?></h3>
+    <ul>
+        <li><strong><?php _e('Campaign Management:', 'donate-product-host'); ?></strong> <?php _e('Administrators can create multiple donation campaigns, each associated with a specific domain and product. Each campaign can track required and donated quantities, ensuring transparent and accurate management of donations.', 'donate-product-host'); ?></li>
+        <li><strong><?php _e('Client Integration:', 'donate-product-host'); ?></strong> <?php _e('Each campaign generates a unique client key and corresponding JSON file that can be used by client websites to integrate with the host\'s donation system.', 'donate-product-host'); ?></li>
+        <li><strong><?php _e('WooCommerce Compatibility:', 'donate-product-host'); ?></strong> <?php _e('Seamlessly integrates with WooCommerce to create virtual products used for donations, ensuring compatibility and ease of use within the WooCommerce ecosystem.', 'donate-product-host'); ?></li>
+        <li><strong><?php _e('Security and Validation:', 'donate-product-host'); ?></strong> <?php _e('Utilizes JWT (JSON Web Tokens) for secure generation and validation of client keys, ensuring that only authorized campaigns and clients can communicate with the system.', 'donate-product-host'); ?></li>
+        <li><strong><?php _e('Customizable Campaign Details:', 'donate-product-host'); ?></strong> <?php _e('Administrators can specify the campaign name, client domain, client email, product ID, and required quantity for each campaign. The plugin also supports updating and managing quantities and total donation amounts.', 'donate-product-host'); ?></li>
+        <li><strong><?php _e('User-Friendly Interface:', 'donate-product-host'); ?></strong> <?php _e('Provides an intuitive and easy-to-use interface for creating and managing campaigns, with detailed tables displaying all relevant information for each campaign.', 'donate-product-host'); ?></li>
+    </ul>
+
+    <p><?php _e('By leveraging these features, the Donate Product Host plugin provides a robust solution for managing donation campaigns, ensuring that administrators have the tools they need to effectively track and manage their donation products within WooCommerce.', 'donate-product-host'); ?></p>
+
+        
     </div>
     <?php
 }
@@ -188,17 +214,21 @@ function dph_settings_section_callback() {
 function dph_secret_key_callback() {
     $secret_key = get_option('dph_secret_key');
     echo '<input type="text" id="dph_secret_key" name="dph_secret_key" value="' . esc_attr($secret_key) . '" />';
+    echo '<p class="description">' . __('Set a secret key to ensure the security of sharing data with customers.', 'donate-product-host') . '</p>';
+    echo '<p class="description"><strong>' . __('Never share this secret key with customers!', 'donate-product-host') . '</strong></p>';
 }
 
 function dph_host_email_callback() {
     $host_email = get_option('dph_host_email');
     echo '<input type="text" id="dph_host_email" name="dph_host_email" value="' . esc_attr($host_email) . '" />';
+    echo '<p class="description">' . __('Set up an email address where you want to receive donation notifications.', 'donate-product-host') . '</p>';
 }
 
 function dph_at_self_callback() {
     $at_self = get_option('dph_at_self');
     $checked = $at_self ? 'checked' : '';
     echo '<input type="checkbox" id="dph_at_self" name="dph_at_self" value="1" ' . $checked . ' />';
+    echo '<p class="description">' . __('Check if you want to include a donation product on your website as well.', 'donate-product-host') . '</p>';
 }
 
 function dph_product_id_at_self_callback() {
@@ -332,23 +362,23 @@ function dph_add_campaign_page() {
         <table class="form-table">
             <tr valign="top">
                 <th scope="row"><label for="campaign_name"><?php _e('Campaign Name', 'donate-product-host'); ?></label></th>
-                <td><input type="text" id="campaign_name" name="campaign_name" required /></td>
+                <td><input type="text" id="campaign_name" name="campaign_name" required /><p class="description"><?php _e('Set a campaign title to display on the donor page instead of your actual product name. The title is associated with the customer\'s domain and cannot be used multiple times for the same domain. But the same title can be used for different domains.', 'donate-product-host') ?></p><p class="description"><?php _e('For example, you donate a product "low-stemmed plant" and the title of the campaign can be "Landscaping for a kindergarten". Or you donate a "Juicer" product and the title of the campaign can be "Equipping a kitchen for a school".', 'donate-product-host') ?></p></td>
             </tr>
             <tr valign="top">
                 <th scope="row"><label for="client_domain"><?php _e('Client Domain', 'donate-product-host'); ?></label></th>
-                <td><input type="text" id="client_domain" name="client_domain" required /></td>
+                <td><input type="text" id="client_domain" name="client_domain" required /><p class="description"><?php _e('Enter the domain of the donor site that should show the donation product to its site. Set it to example.com format.', 'donate-product-host') ?></p></td>
             </tr>
             <tr valign="top">
                 <th scope="row"><label for="client_email"><?php _e('Client Email', 'donate-product-host'); ?></label></th>
-                <td><input type="email" id="client_email" name="client_email" required /></td>
+                <td><input type="email" id="client_email" name="client_email" required /><p class="description"><?php _e('Set up a customer email to contact for the relevant campaign.', 'donate-product-host') ?></p></td>
             </tr>
             <tr valign="top">
                 <th scope="row"><label for="product_id"><?php _e('Product ID', 'donate-product-host'); ?></label></th>
-                <td><input type="number" id="product_id" name="product_id" required /></td>
+                <td><input type="number" id="product_id" name="product_id" required /><p class="description"><?php _e('Enter the ID of the product you intend to donate through this campaign.', 'donate-product-host') ?></p></td>
             </tr>
             <tr valign="top">
                 <th scope="row"><label for="required_quantity"><?php _e('Required Quantity', 'donate-product-host'); ?></label></th>
-                <td><input type="number" id="required_quantity" name="required_quantity" required /></td>
+                <td><input type="number" id="required_quantity" name="required_quantity" required /><p class="description"><?php _e('Enter the amount of donated products after which the campaign will end.', 'donate-product-host') ?></p></td>
             </tr>
         </table>
         <?php submit_button(__('Add Campaign', 'donate-product-host')); ?>
@@ -396,6 +426,7 @@ function dph_view_campaigns_page() {
     $campaigns = $wpdb->get_results("SELECT * FROM $table_name");
 
     if ($campaigns) {
+        echo '<p>&nbsp;</p>';
         echo '<table class="wp-list-table widefat fixed striped">';
         echo '<thead>';
         echo '<tr>';
