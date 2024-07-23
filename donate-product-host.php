@@ -55,7 +55,7 @@ function dph_create_table() {
         json_downloads mediumint(9) DEFAULT 0,
         total_amount decimal(10, 2) DEFAULT 0,
         start_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        client_key varchar(255) NOT NULL,
+        client_key varchar(512) NOT NULL,
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -138,6 +138,8 @@ add_action('admin_init', 'dph_register_settings');
 function dph_register_settings() {
     register_setting('dph_settings_group', 'dph_secret_key');
     register_setting('dph_settings_group', 'dph_host_email');
+    register_setting('dph_settings_group', 'dph_at_self');
+    register_setting('dph_settings_group', 'dph_product_id_at_self');
 
     add_settings_section(
         'dph_settings_section',
@@ -161,6 +163,22 @@ function dph_register_settings() {
         'dph-settings',
         'dph_settings_section'
     );
+
+    add_settings_field(
+        'dph_at_self',
+        __('Donate at self', 'donate-product-host'),
+        'dph_at_self_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
+
+    add_settings_field(
+        'dph_product_id_at_self',
+        __('Product ID to donate at self', 'donate-product-host'),
+        'dph_product_id_at_self_callback',
+        'dph-settings',
+        'dph_settings_section'
+    );
 }
 
 function dph_settings_section_callback() {
@@ -177,6 +195,37 @@ function dph_host_email_callback() {
     echo '<input type="text" id="dph_host_email" name="dph_host_email" value="' . esc_attr($host_email) . '" />';
 }
 
+function dph_at_self_callback() {
+    $at_self = get_option('dph_at_self');
+    $checked = $at_self ? 'checked' : '';
+    echo '<input type="checkbox" id="dph_at_self" name="dph_at_self" value="1" ' . $checked . ' />';
+}
+
+function dph_product_id_at_self_callback() {
+    $product_id_at_self = get_option('dph_product_id_at_self');
+    echo '<input type="text" id="dph_product_id_at_self" name="dph_product_id_at_self" value="' . esc_attr($product_id_at_self) . '" />';
+}
+
+function dph_admin_script() {
+    ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            function toggleProductIDField() {
+                if ($('#dph_at_self').is(':checked')) {
+                    $('#dph_product_id_at_self').closest('tr').show();
+                } else {
+                    $('#dph_product_id_at_self').closest('tr').hide();
+                }
+            }
+            toggleProductIDField();
+            $('#dph_at_self').change(function() {
+                toggleProductIDField();
+            });
+        });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'dph_admin_script');
 
 // Function to display add campaign form
 function dph_add_campaign_page() {
@@ -192,61 +241,86 @@ function dph_add_campaign_page() {
         $secret_key = get_option('dph_secret_key');
         $payload_key = dph_generate_client_key($client_domain);
         $payload = array(
+            'campaign_name' => $campaign_name,
             'payload_key' => $payload_key,
             'client_domain' => $client_domain
         );
-        
-        if ($product) {
-            $product_price = $product->get_price();
-            $required_quantity = intval($_POST['required_quantity']);
-            $client_key = dph_generate_jwt($payload, $secret_key);
-            $client_email = get_option('dph_host_email');
 
-            $wpdb->insert(
-                $table_name,
-                [
-                    'campaign_name' => $campaign_name,
-                    'client_domain' => $client_domain,
-                    'client_email' => $client_email,
-                    'product_id' => $product_id,
-                    'product_price' => $product_price,
-                    'required_quantity' => $required_quantity,
-                    'client_key' => $client_key,
-                ]
-            );
-			// Create JSON file for the client
-            $json_data = [
-                'campaign_name' => $campaign_name,
-                'product_id' => $product_id,
-                'product_price' => $product_price,
-                'required_quantity' => $required_quantity,
-                'client_email' => $client_email,
-            ];
+        // Check if the client_domain and campaign_name already exist
+        $existing_campaign = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+                $client_domain, $campaign_name
+            )
+        );
 
-            $client_domain_filename = str_replace('.', '_', $client_domain);
-            $client_key_short = substr($client_key, 0, 8);
-            $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
-
-            // Define the path to the campaigns folder
-            $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
-            if (!file_exists($campaigns_folder)) {
-                mkdir($campaigns_folder, 0755, true);
-            }
-
-            $json_file_path = $campaigns_folder . '/' . $json_filename;
-            file_put_contents($json_file_path, json_encode($json_data));
-
-            // Add success notice
-            $_SESSION['dph_admin_notices'] = [
-                'type' => 'success',
-                'message' => __('Client and campaign added successfully!', 'donate-product-host')
-            ];
-        } else {
+        if ($existing_campaign > 0) {
             // Add error notice
             $_SESSION['dph_admin_notices'] = [
                 'type' => 'error',
-                'message' => __('Invalid Product ID!', 'donate-product-host')
+                'message' => __('Campaign with this name already exists for this client domain!', 'donate-product-host')
             ];
+        } else {
+            if ($product) {
+                $product_price = $product->get_price();
+                $required_quantity = intval($_POST['required_quantity']);
+                $client_key = dph_generate_jwt($payload, $secret_key);
+                $host_email = get_option('dph_host_email');
+                $host_checkout_page = wc_get_checkout_url().'?add-to-cart=';
+
+                $wpdb->insert(
+                    $table_name,
+                    [
+                        'campaign_name' => $campaign_name,
+                        'client_domain' => $client_domain,
+                        'client_email' => $client_email,
+                        'product_id' => $product_id,
+                        'product_price' => $product_price,
+                        'required_quantity' => $required_quantity,
+                        'client_key' => $client_key,
+                    ]
+                );
+
+                // Create JSON file for the client
+                $json_data = [
+                    'campaign_name' => $campaign_name,
+                    'product_id' => $product_id,
+                    'product_price' => $product_price,
+                    'required_quantity' => $required_quantity,
+                    'host_email' => $host_email,
+                    'host_checkout_page' => $host_checkout_page,
+                ];
+
+                $client_domain_filename = str_replace('.', '_', $client_domain);
+                // Split the JWT into its three parts
+                list($header, $payload, $signature) = explode('.', $client_key);
+
+                // Get the first 8 characters of the signature directly
+                $client_key_short = substr($signature, 0, 8);
+
+                $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
+
+                // Define the path to the campaigns folder
+                $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
+                if (!file_exists($campaigns_folder)) {
+                    mkdir($campaigns_folder, 0755, true);
+                }
+
+                $json_file_path = $campaigns_folder . '/' . $json_filename;
+                file_put_contents($json_file_path, json_encode($json_data));
+
+                // Add success notice
+                $_SESSION['dph_admin_notices'] = [
+                    'type' => 'success',
+                    'message' => __('Client and campaign added successfully!', 'donate-product-host')
+                ];
+            } else {
+                // Add error notice
+                $_SESSION['dph_admin_notices'] = [
+                    'type' => 'error',
+                    'message' => __('Invalid Product ID!', 'donate-product-host')
+                ];
+            }
         }
         // Redirect to clear the form and display the notice
         wp_redirect(add_query_arg('tab', 'add_campaign', admin_url('admin.php?page=donate-product-host')));
@@ -281,6 +355,7 @@ function dph_add_campaign_page() {
     </form>
     <?php
 }
+
 
 // Admin notifications
 function dph_admin_notices() {
@@ -348,7 +423,10 @@ function dph_view_campaigns_page() {
             echo '<td>' . esc_html($campaign->donated_quantity) . '</td>';
             echo '<td>' . esc_html($campaign->total_amount) . '</td>';
             echo '<td>' . esc_html($campaign->start_date) . '</td>';
-			echo '<td>' . esc_html($campaign->client_key) . '</td>';
+			echo '<td>
+            <span class="client-key-short">' . esc_html(substr($campaign->client_key, 0, 8)) . '...</span>
+            <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
+            </td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -356,6 +434,23 @@ function dph_view_campaigns_page() {
     } else {
         echo '<p>' . __('No campaigns found.', 'donate-product-host') . '</p>';
     }
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButtons = document.querySelectorAll('.copy-client-key');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const clientKey = this.getAttribute('data-client-key');
+                navigator.clipboard.writeText(clientKey).then(function() {
+                    alert('Client key copied to clipboard');
+                }, function() {
+                    alert('Failed to copy client key');
+                });
+            });
+        });
+    });
+    </script>
+    <?php
 }
 
 // Генерирање и проверка на JWT токенот
@@ -400,12 +495,40 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
 
     $client_domain = sanitize_text_field($params['client_domain']);
     $client_domain_base = str_replace('_', '.', $client_domain);
+    $campaign_name = sanitize_text_field($params['campaign_name']);
     $table_name = $wpdb->prefix . 'dph_clients';
-    $query = $wpdb->prepare("SELECT client_key FROM $table_name WHERE client_domain = %s", $client_domain_base);
+    $query = $wpdb->prepare(
+        "SELECT client_key FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    );
     $client_key = $wpdb->get_var($query);//error_log('Ova e od bazata: '.$client_key);
     //$client_key = sanitize_text_field($params['client_key']);
     $donated_quantity = intval($params['donated_quantity']);
-    $client_key_short = substr($client_key, 0, 8);
+    // Split the JWT into its three parts
+    list($header, $payload, $signature) = explode('.', $client_key);
+
+    // Get the first 8 characters of the signature directly
+    $client_key_short = substr($signature, 0, 8);
+    // Читање на `required_quantity`
+    //$required_quantity = $wpdb->get_var($wpdb->prepare( 
+      //  "SELECT required_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+      //  $client_domain_base,
+      //  $campaign_name
+    //));
+    $required_quantity = intval($params['required_quantity']);
+    $old_donated_quantity = $wpdb->get_var($wpdb->prepare( 
+        "SELECT donated_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    ));
+    //error_log("Old Donated Quantiy e: ".$old_donated_quantity);
+    //error_log('Requires Quantity e: '.$required_quantity);
+    $product_price = floatval($wpdb->get_var($wpdb->prepare( 
+        "SELECT product_price FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
+        $client_domain_base,
+        $campaign_name
+    )));
 
     $file_path = plugin_dir_path(__FILE__) . "campaigns/{$client_domain}_{$client_key_short}.json";
 
@@ -421,10 +544,131 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
         return new WP_Error('invalid_json', 'Invalid JSON file', array('status' => 500));
     }
 
+    // Ажурирање на базата
+    if ($required_quantity !== null) {
+        //if ($old_donated_quantity === '0') {
+          //  $new_donated_quantity = $required_quantity - $donated_quantity;
+        //} else {
+        //    $new_donated_quantity = $old_donated_quantity - $donated_quantity;
+        //}
+        $new_donated_quantity = $old_donated_quantity + $donated_quantity;
+        $quantity_difference = $required_quantity - $donated_quantity;
+        //$total_amount = floatval($quantity_difference * $product_price);
+        $total_amount = floatval($new_donated_quantity * $product_price);
+        $total_amount_formatted = number_format($total_amount, 2, '.', '');
+        $wpdb->update(
+            $table_name,
+            array(
+                'donated_quantity' => $new_donated_quantity,
+                'total_amount' => $total_amount_formatted,
+                'required_quantity' => $quantity_difference
+            ),
+            array(
+                'client_domain' => $client_domain_base,
+                'campaign_name' => $campaign_name
+            ),
+            array('%d', '%f'),
+            array('%s', '%s')
+        );
+    }
+
     $campaign_data['required_quantity'] = max(0, intval($campaign_data['required_quantity']) - $donated_quantity);
     file_put_contents($file_path, json_encode($campaign_data));
 
     //error_log("Quantity updated successfully for " . $client_domain . "_" . $client_key);
 
     return rest_ensure_response(array('success' => true, 'new_required_quantity' => $campaign_data['required_quantity']));
+
+}
+
+// Add a checkbox to the checkout page
+add_action('woocommerce_review_order_before_order_total', 'dph_add_donation_checkbox');
+
+function dph_add_donation_checkbox() {
+    if (get_option('dph_at_self')) {
+        $product_id = get_option('dph_product_id_at_self');
+        $product = wc_get_product($product_id);
+        $product_name = $product ->get_name();
+        $product_price = $product->get_price();
+        $max_quantity = $product->get_stock_status();
+        if ($max_quantity == 'instock') {
+            echo '<tr class="donation_product">
+                    <th>' . esc_html($product_name) . '</th>
+                    <td>
+                        <input type="checkbox" id="add_donation_product" name="add_donation_product" onchange="checkboxAction();" value="' . esc_attr($product_id) . '" data-price="' . esc_attr($product_price) . '">
+                        <input type="number" id="donation_product_quantity" name="donation_product_quantity" onchange="updateTotal();" min="1" max="' . esc_attr($max_quantity) . '" value="1" style="width: 60px; margin-left: 10px;" disabled>
+                        ' . wc_price($product_price) . '
+                    </td>
+                  </tr>';
+        }
+    }
+}
+
+// Enqueue the script for adding donation product price in total
+add_action('wp_enqueue_scripts', 'dph_enqueue_scripts');
+
+function dph_enqueue_scripts() {
+    if (is_checkout()) {
+        wp_enqueue_script('dph_donation_product', plugins_url('/dph-donation-product.js', __FILE__), array('jquery'), null, true);
+        wp_localize_script('dph_donation_product', 'wc_price_params', array(
+            'currency_format_num_decimals' => get_option('woocommerce_price_num_decimals'),
+            'currency_format_symbol'       => get_woocommerce_currency_symbol()
+        ));
+    }
+}
+
+// At self add donate product in order
+add_action('woocommerce_checkout_create_order', 'dph_add_donation_product_to_order', 20, 1);
+
+function dph_add_donation_product_to_order($order) {
+    //if (get_option('dph_at_self') && isset($_POST['donation_product_checkbox'])) {
+    if (isset($_POST['add_donation_product']) && $_POST['add_donation_product']) {
+        $product_id = get_option('dph_product_id_at_self');
+        $product = wc_get_product($product_id);
+        $product_quantity = isset($_POST['donation_product_quantity']) ? intval($_POST['donation_product_quantity']) : 1;
+
+        if ($product) {
+            $product_name = $product ->get_name();;
+            $product_price = floatval($product->get_price());
+
+            // Create a new order item for the donation product
+            $item = new WC_Order_Item_Product();
+            $item->set_product_id($product_id);
+            $item->set_name($product_name);
+            $item->set_quantity($product_quantity);
+            $item->set_total($product_price * $product_quantity);
+            $item->add_meta_data('_donation_product', 'yes', true);
+            $item->add_meta_data('_donation_product_quantity', sanitize_text_field($_POST['donation_product_quantity']), true);
+
+            // Add the item to the order
+            $order->add_item($item);
+        }
+    }
+}
+
+// At self add donation product to order as a fee
+add_action('woocommerce_cart_calculate_fees', 'dph_add_donation_product_to_cart');
+
+function dph_add_donation_product_to_cart() {
+    //if (get_option('dph_at_self') && isset($_POST['donation_product_checkbox'])) {
+    if (isset($_POST['add_donation_product']) && !empty($_POST['add_donation_product'])) {
+        $product_id = get_option('dph_product_id_at_self');
+        $quantity = isset($_POST['donation_product_quantity']) ? intval($_POST['donation_product_quantity']) : 1;
+        $product = wc_get_product($product_id);
+
+        if ($product) {
+            $product_price = $product->get_price();
+            WC()->cart->add_fee($product->get_name(), $product_price * $quantity);
+        }
+    }
+}
+
+
+// At self hook into WooCommerce order placement
+//add_action('woocommerce_thankyou', 'dph_handle_order_placement');
+
+function dph_handle_order_placement($order_id) {
+    if (get_option('dph_at_self')) {
+
+    }
 }
