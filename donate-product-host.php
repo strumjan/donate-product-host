@@ -68,7 +68,7 @@ add_action('admin_menu', 'dph_add_admin_menu');
 function dph_add_admin_menu() {
     add_menu_page(
         __('Donate Product Host', 'donate-product-host'),
-        __('Donate Product Host', 'donate-product-host'),
+        __('Donate Product', 'donate-product-host'),
         'manage_options',
         'donate-product-host',
         'dph_admin_page',

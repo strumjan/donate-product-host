@@ -2,8 +2,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Donate Product Host\n"
-"POT-Creation-Date: 2024-07-23 08:29+0200\n"
-"PO-Revision-Date: 2024-07-23 08:32+0200\n"
+"POT-Creation-Date: 2024-07-23 08:54+0200\n"
+"PO-Revision-Date: 2024-07-23 08:54+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: mk\n"
@@ -15,10 +15,13 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: donate-product-host.php\n"
 
-#: donate-product-host.php:70 donate-product-host.php:71
-#: donate-product-host.php:99
+#: donate-product-host.php:70 donate-product-host.php:99
 msgid "Donate Product Host"
 msgstr "Донирај производ - домаќин"
+
+#: donate-product-host.php:71
+msgid "Donate Product"
+msgstr "Донирај производ"
 
 #: donate-product-host.php:101
 msgid "Add New Campaign"
