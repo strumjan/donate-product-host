@@ -427,19 +427,19 @@ function dph_view_campaigns_page() {
 
     if ($campaigns) {
         echo '<p>&nbsp;</p>';
-        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<table class="wp-list-table widefat fixed striped" id="campaignsTable">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th>' . __('Campaign Name', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Client Domain', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Client Email', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Product ID', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Product Price', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Required Quantity', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Donated Quantity', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Total Amount', 'donate-product-host') . '</th>';
-        echo '<th>' . __('Start Date', 'donate-product-host') . '</th>';
-		echo '<th>' . __('Client key', 'donate-product-host') . '</th>';
+        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9650;</a></th>';
+        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9650;</a></th>';
+        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9650;</a></th>';
+        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9650;</a></th>';
+        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9650;</a></th>';
+        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9650;</a></th>';
+        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9650;</a></th>';
+        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9650;</a></th>';
+        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9650;</a></th>';
+        echo '<th>' . __('Client key', 'donate-product-host') . ' <a href="#" id="sort-9">&#9650;</a></th>';
         echo '</tr>';
         echo '</thead>';
         echo '<tbody>';
@@ -454,10 +454,10 @@ function dph_view_campaigns_page() {
             echo '<td>' . esc_html($campaign->donated_quantity) . '</td>';
             echo '<td>' . esc_html($campaign->total_amount) . '</td>';
             echo '<td>' . esc_html($campaign->start_date) . '</td>';
-			echo '<td>
-            <span class="client-key-short">' . esc_html(substr($campaign->client_key, 0, 8)) . '...</span>
-            <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
-            </td>';
+            echo '<td>
+                <span class="client-key-short">' . esc_html(substr($campaign->client_key, 0, 8)) . '...</span>
+                <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
+                </td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -479,9 +479,80 @@ function dph_view_campaigns_page() {
                 });
             });
         });
+
+        const sortDirections = Array(10).fill(true); // True for ascending, false for descending
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("campaignsTable");
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            const direction = sortDirections[columnIndex] ? 1 : -1;
+
+            rows.sort(function(a, b) {
+                const aText = a.querySelectorAll("td")[columnIndex].textContent.trim();
+                const bText = b.querySelectorAll("td")[columnIndex].textContent.trim();
+
+                return aText.localeCompare(bText, undefined, {numeric: true}) * direction;
+            });
+
+            // Append sorted rows
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+
+            // Toggle the direction for next click
+            sortDirections[columnIndex] = !sortDirections[columnIndex];
+
+            // Update arrow symbols
+            for (let i = 0; i < 10; i++) {
+                const arrow = document.getElementById('sort-' + i);
+                if (i === columnIndex) {
+                    arrow.innerHTML = sortDirections[columnIndex] ? '&#9650;' : '&#9660;';
+                } else {
+                    arrow.innerHTML = '&#9650;';
+                    sortDirections[i] = true; // Reset other directions to ascending
+                }
+            }
+        }
+
+        // Add event listeners to sort links
+        for (let i = 0; i < 10; i++) {
+            const arrow = document.getElementById('sort-' + i);
+            arrow.addEventListener('click', function(event) {
+                event.preventDefault();
+                sortTable(i);
+            });
+        }
     });
     </script>
     <?php
+}
+
+add_action('wp_ajax_send_client_key', 'dph_send_client_key');
+function dph_send_client_key() {
+    check_ajax_referer('send_client_key_nonce', 'security');
+
+    $client_key = sanitize_text_field($_POST['client_key']);
+    $client_email = sanitize_email($_POST['client_email']);
+    $site_url = get_site_url();
+    $site_name = get_bloginfo('name');
+    $wc_email = get_option('woocommerce_email_from_address');
+
+    $subject = __('Message from ', 'donate-product-host') . $site_url;
+    $message = __('This is your Client key: ', 'donate-product-host') . $client_key;
+    $headers = array(
+        'Content-Type: text/html; charset=UTF-8',
+        'From: ' . $site_name . ' <' . $wc_email . '>'
+    );
+
+    if (wp_mail($client_email, $subject, $message, $headers)) {
+        wp_send_json_success(__('Email sent successfully', 'donate-product-host'));
+    } else {
+        wp_send_json_error(__('Failed to send email', 'donate-product-host'));
+    }
+
+    wp_die();
 }
 
 // Генерирање и проверка на JWT токенот

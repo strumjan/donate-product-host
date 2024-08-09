@@ -2,8 +2,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Donate Product Host\n"
-"POT-Creation-Date: 2024-07-23 08:54+0200\n"
-"PO-Revision-Date: 2024-07-23 08:54+0200\n"
+"POT-Creation-Date: 2024-07-26 07:25+0200\n"
+"PO-Revision-Date: 2024-07-26 07:26+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: mk\n"
@@ -316,10 +316,38 @@ msgstr "Почетен датум"
 msgid "Client key"
 msgstr "Клиентски клуч"
 
-#: donate-product-host.php:459
+#: donate-product-host.php:460
 msgid "Copy"
 msgstr "Копирај"
 
-#: donate-product-host.php:466
+#: donate-product-host.php:461
+msgid "Send"
+msgstr "Прати"
+
+#: donate-product-host.php:468
 msgid "No campaigns found."
 msgstr "Нема пронајдено кампањи."
+
+#: donate-product-host.php:478
+msgid "Client key copied to clipboard"
+msgstr "Клиентскиот клуч е копиран во меморијата"
+
+#: donate-product-host.php:480
+msgid "Failed to copy client key"
+msgstr "Неуспешно копирање на клиентскиот клуч"
+
+#: donate-product-host.php:514
+msgid "Message from "
+msgstr "Порака од "
+
+#: donate-product-host.php:515
+msgid "This is your Client key: "
+msgstr "Ова е вашиот клиентски клуч: "
+
+#: donate-product-host.php:519
+msgid "Email sent successfully"
+msgstr "Пораката е успешно пратена"
+
+#: donate-product-host.php:521
+msgid "Failed to send email"
+msgstr "Не успеа праќањето на пораката"
