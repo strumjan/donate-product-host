@@ -439,7 +439,7 @@ function dph_view_campaigns_page() {
         echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9650;</a></th>';
         echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9650;</a></th>';
         echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9650;</a></th>';
-        echo '<th>' . __('Client key', 'donate-product-host') . ' <a href="#" id="sort-9">&#9650;</a></th>';
+        echo '<th>' . __('Client key', 'donate-product-host') . '</th>';
         echo '</tr>';
         echo '</thead>';
         echo '<tbody>';
@@ -455,8 +455,8 @@ function dph_view_campaigns_page() {
             echo '<td>' . esc_html($campaign->total_amount) . '</td>';
             echo '<td>' . esc_html($campaign->start_date) . '</td>';
             echo '<td>
-                <span class="client-key-short">' . esc_html(substr($campaign->client_key, 0, 8)) . '...</span>
                 <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
+                <button class="send-client-key" data-client-key="' . esc_attr($campaign->client_key) . '" data-client-email="' . esc_attr($campaign->client_email) . '">' . __('Send', 'donate-product-host') . '</button>
                 </td>';
             echo '</tr>';
         }
@@ -505,7 +505,7 @@ function dph_view_campaigns_page() {
             sortDirections[columnIndex] = !sortDirections[columnIndex];
 
             // Update arrow symbols
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 9; i++) {
                 const arrow = document.getElementById('sort-' + i);
                 if (i === columnIndex) {
                     arrow.innerHTML = sortDirections[columnIndex] ? '&#9650;' : '&#9660;';
@@ -517,13 +517,30 @@ function dph_view_campaigns_page() {
         }
 
         // Add event listeners to sort links
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 9; i++) {
             const arrow = document.getElementById('sort-' + i);
             arrow.addEventListener('click', function(event) {
                 event.preventDefault();
                 sortTable(i);
             });
         }
+
+        const sendButtons = document.querySelectorAll('.send-client-key');
+        sendButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const clientKey = this.getAttribute('data-client-key');
+                const clientEmail = this.getAttribute('data-client-email');
+                const data = {
+                    action: 'send_client_key',
+                    client_key: clientKey,
+                    client_email: clientEmail,
+                    security: '<?php echo wp_create_nonce("send_client_key_nonce"); ?>'
+                };
+                jQuery.post(ajaxurl, data, function(response) {
+                    alert(response.data);
+                });
+            });
+        });
     });
     </script>
     <?php
