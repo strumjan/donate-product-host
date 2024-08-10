@@ -2,8 +2,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Donate Product Host\n"
-"POT-Creation-Date: 2024-08-10 15:05+0200\n"
-"PO-Revision-Date: 2024-08-10 15:06+0200\n"
+"POT-Creation-Date: 2024-08-10 22:51+0200\n"
+"PO-Revision-Date: 2024-08-10 22:52+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: mk\n"
@@ -14,6 +14,7 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: donate-product-host.php\n"
+"X-Poedit-SearchPath-1: dph-donation-product-ajax.js\n"
 
 #: donate-product-host.php:72 donate-product-host.php:101
 msgid "Donate Product Host"
@@ -340,6 +341,10 @@ msgstr "Копирај"
 msgid "Send"
 msgstr "Прати"
 
+#: donate-product-host.php:467
+msgid "Archive"
+msgstr "Архивирај"
+
 #: donate-product-host.php:473
 msgid "No campaigns found."
 msgstr "Нема пронајдено кампањи."
@@ -360,9 +365,37 @@ msgstr "Пораката е успешно пратена"
 msgid "Failed to send email"
 msgstr "Не успеа праќањето на пораката"
 
+#: donate-product-host.php:618
+msgid "Unarchive"
+msgstr "Одархивирај"
+
 #: donate-product-host.php:624
 msgid "No archived campaigns found."
 msgstr "Нема пронајдено архивирани кампањи."
+
+#: dph-donation-product-ajax.js:4
+msgid "Are you sure you want to archive this campaign?"
+msgstr "Сигурно ли сакате да ја архивирате кампањата?"
+
+#: dph-donation-product-ajax.js:14
+msgid "Campaign archived successfully."
+msgstr "Кампањата е успешно архивирана."
+
+#: dph-donation-product-ajax.js:17
+msgid "Failed to archive the campaign."
+msgstr "Не успеа архивирањето."
+
+#: dph-donation-product-ajax.js:25
+msgid "Are you sure you want to unarchive this campaign?"
+msgstr "Сигурно ли сакате да ја одархивирате кампањата?"
+
+#: dph-donation-product-ajax.js:35
+msgid "Campaign unarchived successfully."
+msgstr "Кампањата е успешно одархивирана."
+
+#: dph-donation-product-ajax.js:38
+msgid "Failed to unarchive the campaign."
+msgstr "Не успеа одархивирањето."
 
 #~ msgid "Client key copied to clipboard"
 #~ msgstr "Клиентскиот клуч е копиран во меморијата"

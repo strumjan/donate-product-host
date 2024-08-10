@@ -464,7 +464,7 @@ function dph_view_campaigns_page() {
                 <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
                 <button class="send-client-key" data-client-key="' . esc_attr($campaign->client_key) . '" data-client-email="' . esc_attr($campaign->client_email) . '">' . __('Send', 'donate-product-host') . '</button>
                 </td>';
-            echo '<td><a href="#" onclick="archiveCampaign(' . esc_attr($campaign->id) . ')">Archive</a></td>';
+            echo '<td><a href="#" onclick="archiveCampaign(' . esc_attr($campaign->id) . ')">' . __('Archive', 'donate-product-host')  . '</a></td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -615,7 +615,7 @@ function dph_archived_campaigns_page() {
             echo '<td>' . esc_html($campaign->donated_quantity) . '</td>';
             echo '<td>' . esc_html($campaign->total_amount) . '</td>';
             echo '<td>' . esc_html($campaign->start_date) . '</td>';
-            echo '<td><a href="#" onclick="unarchiveCampaign(' . esc_attr($campaign->id) . ')">Unarchive</a></td>';
+            echo '<td><a href="#" onclick="unarchiveCampaign(' . esc_attr($campaign->id) . ')">' . __('Unarchive', 'donate-product-host')  . '</a></td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -699,7 +699,7 @@ function dph_archive_campaign() {
     } else {
         wp_send_json_error('Failed to archive the campaign.');
     }
-    wp_die(); // Ова е важно за завршување на AJAX повикот
+    wp_die();
 }
 
 function dph_unarchive_campaign() {
@@ -721,12 +721,6 @@ function dph_unarchive_campaign() {
     } else {
         wp_send_json_error('Failed to unarchive the campaign.');
     }
-    wp_die(); // Ова е важно за завршување на AJAX повикот
-}
-
-add_action('wp_ajax_test_ajax', 'test_ajax_function');
-function test_ajax_function() {
-    wp_send_json_success('This is a test.');
     wp_die();
 }
 
@@ -887,6 +881,7 @@ add_action('admin_enqueue_scripts', 'dph_enqueue_admin_scripts');
 function dph_enqueue_admin_scripts($hook_suffix) {
     // Вчитување на JavaScript за функционалност во админ панелот
     wp_enqueue_script('dph_donation_product_ajax', plugins_url('/dph-donation-product-ajax.js', __FILE__), array('jquery'), null, true);
+    wp_set_script_translations('dph_donation_product_ajax', 'donate-product-host', plugin_dir_path( __FILE__ ) . 'languages');
 }
 
 // Enqueue the script for adding donation product price in total

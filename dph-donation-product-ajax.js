@@ -1,5 +1,7 @@
+const { __, _x, _n, sprintf } = wp.i18n;
+
 function archiveCampaign(campaignId) {
-if (confirm('Are you sure you want to archive this campaign?')) {
+if (confirm(__('Are you sure you want to archive this campaign?', 'donate-product-host'))) {
     jQuery.ajax({
         url: ajaxurl,
         type: 'POST',
@@ -9,10 +11,10 @@ if (confirm('Are you sure you want to archive this campaign?')) {
         },
         success: function (response) {
             if (response.success) {
-                alert('Campaign archived successfully.');
+                alert(__('Campaign archived successfully.', 'donate-product-host'));
                 window.location.href = '?page=donate-product-host&tab=archived_campaigns'; // Префрли се на табот за архивирани кампањи
             } else {
-                alert('Failed to archive the campaign.');
+                alert(__('Failed to archive the campaign.', 'donate-product-host'));
             }
         }
     });
@@ -20,7 +22,7 @@ if (confirm('Are you sure you want to archive this campaign?')) {
 }
 
 function unarchiveCampaign(campaignId) {
-if (confirm('Are you sure you want to unarchive this campaign?')) {
+if (confirm(__('Are you sure you want to unarchive this campaign?', 'donate-product-host'))) {
     jQuery.ajax({
         url: ajaxurl,
         type: 'POST',
@@ -29,20 +31,13 @@ if (confirm('Are you sure you want to unarchive this campaign?')) {
             campaign_id: campaignId,
         },
         success: function (response) {
-            console.log(response);
             if (response.success) {
-                alert('Campaign unarchived successfully.');
+                alert(__('Campaign unarchived successfully.', 'donate-product-host'));
                 window.location.href = '?page=donate-product-host&tab=view_campaigns'; // Префрли се на табот за активни кампањи
             } else {
-                alert('Failed to unarchive the campaign.');
+                alert(__('Failed to unarchive the campaign.', 'donate-product-host'));
             }
         },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.log('AJAX Error:', textStatus, errorThrown);
-        },
-        complete: function (xhr, status) {
-            console.log('AJAX request completed. Status:', status);
-        }
     });
 }
 }
