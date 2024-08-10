@@ -41,27 +41,29 @@ function dph_load_textdomain() {
 function dph_create_table() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'dph_clients';
+
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE $table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
-        campaign_name varchar(255) NOT NULL,
-        client_domain varchar(255) NOT NULL,
-        client_email varchar(255) NOT NULL,
-        product_id bigint(20) NOT NULL,
+        campaign_name text NOT NULL,
+        client_domain text NOT NULL,
+        client_email text NOT NULL,
+        product_id mediumint(9) NOT NULL,
         product_price decimal(10, 2) NOT NULL,
         required_quantity mediumint(9) NOT NULL,
         donated_quantity mediumint(9) DEFAULT 0,
-        json_downloads mediumint(9) DEFAULT 0,
-        total_amount decimal(10, 2) DEFAULT 0,
-        start_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        client_key varchar(512) NOT NULL,
-        PRIMARY KEY (id)
+        total_amount decimal(10, 2) DEFAULT 0.00,
+        start_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        client_key text NOT NULL,
+        campaign_archive tinyint(1) DEFAULT 0,
+        PRIMARY KEY  (id)
     ) $charset_collate;";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
 }
+
 
 // Add admin menu
 add_action('admin_menu', 'dph_add_admin_menu');
@@ -100,6 +102,7 @@ function dph_admin_page() {
         <h2 class="nav-tab-wrapper">
             <a href="?page=donate-product-host&tab=add_campaign" class="nav-tab <?php echo $tab == 'add_campaign' ? 'nav-tab-active' : ''; ?>"><?php _e('Add New Campaign', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=view_campaigns" class="nav-tab <?php echo $tab == 'view_campaigns' ? 'nav-tab-active' : ''; ?>"><?php _e('View Campaigns', 'donate-product-host'); ?></a>
+            <a href="?page=donate-product-host&tab=archived_campaigns" class="nav-tab <?php echo $tab == 'archived_campaigns' ? 'nav-tab-active' : ''; ?>"><?php _e('Archived Campaigns', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=settings" class="nav-tab <?php echo $tab == 'settings' ? 'nav-tab-active' : ''; ?>"><?php _e('Settings', 'donate-product-host'); ?></a>
             <a href="?page=donate-product-host&tab=about" class="nav-tab <?php echo $tab == 'about' ? 'nav-tab-active' : ''; ?>"><?php _e('About', 'donate-product-host'); ?></a>
         </h2>
@@ -109,6 +112,8 @@ function dph_admin_page() {
                 dph_add_campaign_page();
             } elseif ($tab == 'view_campaigns') {
                 dph_view_campaigns_page();
+            } elseif ($tab == 'archived_campaigns') {
+                dph_archived_campaigns_page();
             } elseif ($tab == 'settings') {
                 dph_settings_page();
             } elseif ($tab == 'about') {
@@ -423,23 +428,24 @@ add_action('admin_notices', 'dph_admin_notices');
 function dph_view_campaigns_page() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'dph_clients';
-    $campaigns = $wpdb->get_results("SELECT * FROM $table_name");
+    $campaigns = $wpdb->get_results("SELECT * FROM $table_name WHERE campaign_archive = 0");
 
     if ($campaigns) {
         echo '<p>&nbsp;</p>';
         echo '<table class="wp-list-table widefat fixed striped" id="campaignsTable">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9650;</a></th>';
-        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9650;</a></th>';
-        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9650;</a></th>';
-        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9650;</a></th>';
-        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9650;</a></th>';
-        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9650;</a></th>';
-        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9650;</a></th>';
-        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9650;</a></th>';
-        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9650;</a></th>';
+        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9660;</a></th>';
+        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9660;</a></th>';
+        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9660;</a></th>';
+        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9660;</a></th>';
+        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9660;</a></th>';
+        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9660;</a></th>';
+        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9660;</a></th>';
+        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9660;</a></th>';
+        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9660;</a></th>';
         echo '<th>' . __('Client key', 'donate-product-host') . '</th>';
+        echo '<th>' . __('Actions', 'donate-product-host') . '</th>';
         echo '</tr>';
         echo '</thead>';
         echo '<tbody>';
@@ -458,6 +464,7 @@ function dph_view_campaigns_page() {
                 <button class="copy-client-key" data-client-key="' . esc_attr($campaign->client_key) . '">' . __('Copy', 'donate-product-host') . '</button>
                 <button class="send-client-key" data-client-key="' . esc_attr($campaign->client_key) . '" data-client-email="' . esc_attr($campaign->client_email) . '">' . __('Send', 'donate-product-host') . '</button>
                 </td>';
+            echo '<td><a href="#" onclick="archiveCampaign(' . esc_attr($campaign->id) . ')">Archive</a></td>';
             echo '</tr>';
         }
         echo '</tbody>';
@@ -480,7 +487,7 @@ function dph_view_campaigns_page() {
             });
         });
 
-        const sortDirections = Array(10).fill(true); // True for ascending, false for descending
+        const sortDirections = Array(9).fill(true); // True for ascending, false for descending
 
         function sortTable(columnIndex) {
             const table = document.getElementById("campaignsTable");
@@ -510,7 +517,7 @@ function dph_view_campaigns_page() {
                 if (i === columnIndex) {
                     arrow.innerHTML = sortDirections[columnIndex] ? '&#9650;' : '&#9660;';
                 } else {
-                    arrow.innerHTML = '&#9650;';
+                    arrow.innerHTML = '&#9660;';
                     sortDirections[i] = true; // Reset other directions to ascending
                 }
             }
@@ -546,6 +553,7 @@ function dph_view_campaigns_page() {
     <?php
 }
 
+
 add_action('wp_ajax_send_client_key', 'dph_send_client_key');
 function dph_send_client_key() {
     check_ajax_referer('send_client_key_nonce', 'security');
@@ -569,6 +577,156 @@ function dph_send_client_key() {
         wp_send_json_error(__('Failed to send email', 'donate-product-host'));
     }
 
+    wp_die();
+}
+
+// Страница за архивата
+function dph_archived_campaigns_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'dph_clients';
+    $campaigns = $wpdb->get_results("SELECT * FROM $table_name WHERE campaign_archive = 1");
+
+    if ($campaigns) {
+        echo '<p>&nbsp;</p>';
+        echo '<table class="wp-list-table widefat fixed striped" id="archivedCampaignsTable">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9660;</a></th>';
+        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9660;</a></th>';
+        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9660;</a></th>';
+        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9660;</a></th>';
+        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9660;</a></th>';
+        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9660;</a></th>';
+        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9660;</a></th>';
+        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9660;</a></th>';
+        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9660;</a></th>';
+        echo '<th>' . __('Actions', 'donate-product-host') . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+        foreach ($campaigns as $campaign) {
+            echo '<tr>';
+            echo '<td>' . esc_html($campaign->campaign_name) . '</td>';
+            echo '<td>' . esc_html($campaign->client_domain) . '</td>';
+            echo '<td>' . esc_html($campaign->client_email) . '</td>';
+            echo '<td>' . esc_html($campaign->product_id) . '</td>';
+            echo '<td>' . esc_html($campaign->product_price) . '</td>';
+            echo '<td>' . esc_html($campaign->required_quantity) . '</td>';
+            echo '<td>' . esc_html($campaign->donated_quantity) . '</td>';
+            echo '<td>' . esc_html($campaign->total_amount) . '</td>';
+            echo '<td>' . esc_html($campaign->start_date) . '</td>';
+            echo '<td><a href="#" onclick="unarchiveCampaign(' . esc_attr($campaign->id) . ')">Unarchive</a></td>';
+            echo '</tr>';
+        }
+        echo '</tbody>';
+        echo '</table>';
+    } else {
+        echo '<p>' . __('No archived campaigns found.', 'donate-product-host') . '</p>';
+    }
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortDirections = Array(9).fill(true); // True for ascending, false for descending
+
+        function sortTableA(columnIndex) {
+            const table = document.getElementById("archivedCampaignsTable");
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            const direction = sortDirections[columnIndex] ? 1 : -1;
+
+            rows.sort(function(a, b) {
+                const aText = a.querySelectorAll("td")[columnIndex].textContent.trim();
+                const bText = b.querySelectorAll("td")[columnIndex].textContent.trim();
+
+                return aText.localeCompare(bText, undefined, {numeric: true}) * direction;
+            });
+
+            // Append sorted rows
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+
+            // Toggle the direction for next click
+            sortDirections[columnIndex] = !sortDirections[columnIndex];
+
+            // Update arrow symbols
+            for (let i = 0; i < 9; i++) {
+                const arrow = document.getElementById('sort-' + i);
+                if (i === columnIndex) {
+                    arrow.innerHTML = sortDirections[columnIndex] ? '&#9650;' : '&#9660;';
+                } else {
+                    arrow.innerHTML = '&#9660;';
+                    sortDirections[i] = true; // Reset other directions to ascending
+                }
+            }
+        }
+
+        // Add event listeners to sort links
+        for (let i = 0; i < 9; i++) {
+            const arrow = document.getElementById('sort-' + i);
+            arrow.addEventListener('click', function(event) {
+                event.preventDefault();
+                sortTableA(i);
+            });
+        }
+
+    });
+    </script>
+    <?php
+}
+
+// Функции за архивирање и одархивирање
+add_action('wp_ajax_archive_campaign', 'dph_archive_campaign');
+add_action('wp_ajax_unarchive_campaign', 'dph_unarchive_campaign');
+
+function dph_archive_campaign() {
+    global $wpdb;
+    $campaign_id = intval($_POST['campaign_id']);
+
+    // Архивирај ја кампањата
+    $table_name = $wpdb->prefix . 'dph_clients';
+    $result = $wpdb->update(
+        $table_name,
+        array('campaign_archive' => 1), // Сетирај ја колоната на 1
+        array('id' => $campaign_id),
+        array('%d'),
+        array('%d')
+    );
+
+    if ($result !== false) {
+        wp_send_json_success('Campaign archived successfully.');
+    } else {
+        wp_send_json_error('Failed to archive the campaign.');
+    }
+    wp_die(); // Ова е важно за завршување на AJAX повикот
+}
+
+function dph_unarchive_campaign() {
+    global $wpdb;
+    $campaign_id = intval($_POST['campaign_id']);
+
+    // Одархивирај ја кампањата
+    $table_name = $wpdb->prefix . 'dph_clients';
+    $result = $wpdb->update(
+        $table_name,
+        array('campaign_archive' => 0), // Сетирај ја колоната на 0
+        array('id' => $campaign_id),
+        array('%d'),
+        array('%d')
+    );
+
+    if ($result !== false) {
+        wp_send_json_success('Campaign unarchived successfully.');
+    } else {
+        wp_send_json_error('Failed to unarchive the campaign.');
+    }
+    wp_die(); // Ова е важно за завршување на AJAX повикот
+}
+
+add_action('wp_ajax_test_ajax', 'test_ajax_function');
+function test_ajax_function() {
+    wp_send_json_success('This is a test.');
     wp_die();
 }
 
@@ -721,6 +879,14 @@ function dph_add_donation_checkbox() {
                   </tr>';
         }
     }
+}
+
+// Вчитивање скрипта за архивирањето
+add_action('admin_enqueue_scripts', 'dph_enqueue_admin_scripts');
+
+function dph_enqueue_admin_scripts($hook_suffix) {
+    // Вчитување на JavaScript за функционалност во админ панелот
+    wp_enqueue_script('dph_donation_product_ajax', plugins_url('/dph-donation-product-ajax.js', __FILE__), array('jquery'), null, true);
 }
 
 // Enqueue the script for adding donation product price in total

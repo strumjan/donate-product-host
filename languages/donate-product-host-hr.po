@@ -2,8 +2,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Donate Product Host\n"
-"POT-Creation-Date: 2024-07-26 07:22+0200\n"
-"PO-Revision-Date: 2024-07-26 07:26+0200\n"
+"POT-Creation-Date: 2024-08-10 15:03+0200\n"
+"PO-Revision-Date: 2024-08-10 15:05+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: hr\n"
@@ -15,35 +15,39 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: donate-product-host.php\n"
 
-#: donate-product-host.php:70 donate-product-host.php:99
+#: donate-product-host.php:72 donate-product-host.php:101
 msgid "Donate Product Host"
 msgstr "Donirajte proizvod - domaćin"
 
-#: donate-product-host.php:71
+#: donate-product-host.php:73
 msgid "Donate Product"
 msgstr "Donirajte proizvod"
 
-#: donate-product-host.php:101
+#: donate-product-host.php:103
 msgid "Add New Campaign"
 msgstr "Dodaj novu kampanju"
 
-#: donate-product-host.php:102
+#: donate-product-host.php:104
 msgid "View Campaigns"
 msgstr "Pregledaj kampanje"
 
-#: donate-product-host.php:103 donate-product-host.php:150
+#: donate-product-host.php:105
+msgid "Archived Campaigns"
+msgstr "Arhivirane kampanje"
+
+#: donate-product-host.php:106 donate-product-host.php:155
 msgid "Settings"
 msgstr "Postavke"
 
-#: donate-product-host.php:104
+#: donate-product-host.php:107
 msgid "About"
 msgstr "Za"
 
-#: donate-product-host.php:126
+#: donate-product-host.php:131
 msgid "About Donate Product Host"
 msgstr "Za Doniraj proizvod - domaćin"
 
-#: donate-product-host.php:127
+#: donate-product-host.php:132
 msgid ""
 "The Donate Product Host plugin is designed to facilitate the management and "
 "tracking of donation campaigns for websites using WooCommerce. This plugin "
@@ -55,15 +59,15 @@ msgstr ""
 "plugin omogućuje kreiranje i upravljanje kampanjama, pri čemu se virtualni "
 "proizvod koristi kao donacijska stavka."
 
-#: donate-product-host.php:129
+#: donate-product-host.php:134
 msgid "Key Features:"
 msgstr "Ključne značajke:"
 
-#: donate-product-host.php:131
+#: donate-product-host.php:136
 msgid "Campaign Management:"
 msgstr "Upravljanje kampanjama:"
 
-#: donate-product-host.php:131
+#: donate-product-host.php:136
 msgid ""
 "Administrators can create multiple donation campaigns, each associated with "
 "a specific domain and product. Each campaign can track required and donated "
@@ -74,11 +78,11 @@ msgstr ""
 "donirane količine, osiguravajući transparentno i precizno upravljanje "
 "donacijama."
 
-#: donate-product-host.php:132
+#: donate-product-host.php:137
 msgid "Client Integration:"
 msgstr "Integracija klijenata:"
 
-#: donate-product-host.php:132
+#: donate-product-host.php:137
 msgid ""
 "Each campaign generates a unique client key and corresponding JSON file that "
 "can be used by client websites to integrate with the host's donation system."
@@ -87,11 +91,11 @@ msgstr ""
 "datoteku koja može biti korištena od strane klijentskih web stranica za "
 "integraciju s donacijskim sustavom domaćina."
 
-#: donate-product-host.php:133
+#: donate-product-host.php:138
 msgid "WooCommerce Compatibility:"
 msgstr "Kompatibilnost s WooCommerce:"
 
-#: donate-product-host.php:133
+#: donate-product-host.php:138
 msgid ""
 "Seamlessly integrates with WooCommerce to create virtual products used for "
 "donations, ensuring compatibility and ease of use within the WooCommerce "
@@ -101,11 +105,11 @@ msgstr ""
 "proizvode koji se koriste za donacije, osiguravajući kompatibilnost i "
 "jednostavnost korištenja unutar WooCommerce ekosustava."
 
-#: donate-product-host.php:134
+#: donate-product-host.php:139
 msgid "Security and Validation:"
 msgstr "Sigurnost i provjera:"
 
-#: donate-product-host.php:134
+#: donate-product-host.php:139
 msgid ""
 "Utilizes JWT (JSON Web Tokens) for secure generation and validation of "
 "client keys, ensuring that only authorized campaigns and clients can "
@@ -115,11 +119,11 @@ msgstr ""
 "klijentskih ključeva, osiguravajući da samo autorizirane kampanje i klijenti "
 "mogu komunicirati sa sustavom."
 
-#: donate-product-host.php:135
+#: donate-product-host.php:140
 msgid "Customizable Campaign Details:"
 msgstr "Prilagodljivi detalji kampanje:"
 
-#: donate-product-host.php:135
+#: donate-product-host.php:140
 msgid ""
 "Administrators can specify the campaign name, client domain, client email, "
 "product ID, and required quantity for each campaign. The plugin also "
@@ -129,11 +133,11 @@ msgstr ""
 "klijenta, ID proizvoda i potrebnu količinu za svaku kampanju. Plugin također "
 "podržava ažuriranje i upravljanje količinama i ukupnim iznosima donacija."
 
-#: donate-product-host.php:136
+#: donate-product-host.php:141
 msgid "User-Friendly Interface:"
 msgstr "Korisnički-prijateljsko Sučelje:"
 
-#: donate-product-host.php:136
+#: donate-product-host.php:141
 msgid ""
 "Provides an intuitive and easy-to-use interface for creating and managing "
 "campaigns, with detailed tables displaying all relevant information for each "
@@ -143,7 +147,7 @@ msgstr ""
 "kampanjama, s detaljnim tablicama koje prikazuju sve relevantne informacije "
 "o svakoj kampanji."
 
-#: donate-product-host.php:139
+#: donate-product-host.php:144
 msgid ""
 "By leveraging these features, the Donate Product Host plugin provides a "
 "robust solution for managing donation campaigns, ensuring that "
@@ -155,68 +159,69 @@ msgstr ""
 "administratori imaju alate koji su im potrebni za učinkovito praćenje i "
 "upravljanje svojim donacijskim proizvodima unutar WooCommerce-a."
 
-#: donate-product-host.php:172
+#: donate-product-host.php:177
 msgid "Main Settings"
 msgstr "Glavne postavke"
 
-#: donate-product-host.php:179
+#: donate-product-host.php:184
 msgid "Secret Key"
 msgstr "Tajni ključ"
 
-#: donate-product-host.php:187
+#: donate-product-host.php:192
 msgid "Host email"
 msgstr "Email domaćina"
 
-#: donate-product-host.php:195
+#: donate-product-host.php:200
 msgid "Donate at self"
 msgstr "Doniraj i na svoju stranicu"
 
-#: donate-product-host.php:203
+#: donate-product-host.php:208
 msgid "Product ID to donate at self"
 msgstr "ID proizvoda koji će se donirati na vašoj web stranici"
 
-#: donate-product-host.php:211
+#: donate-product-host.php:216
 msgid "Configure the main settings for the Donate Product Host plugin."
 msgstr "Konfigurirajte glavne postavke plugin-a Doniraj proizvod - domaćin."
 
-#: donate-product-host.php:217
+#: donate-product-host.php:222
 msgid "Set a secret key to ensure the security of sharing data with customers."
 msgstr ""
 "Postavite tajni ključ kako biste osigurali sigurnost dijeljenja podataka s "
 "klijentima."
 
-#: donate-product-host.php:218
+#: donate-product-host.php:223
 msgid "Never share this secret key with customers!"
 msgstr "Nikada ne dijelite ovaj tajni ključ s klijentima!"
 
-#: donate-product-host.php:224
+#: donate-product-host.php:229
 msgid ""
 "Set up an email address where you want to receive donation notifications."
 msgstr "Postavite e-poštu na koju želite primati obavijesti o donacijama."
 
-#: donate-product-host.php:231
+#: donate-product-host.php:236
 msgid ""
 "Check if you want to include a donation product on your website as well."
 msgstr ""
 "Označite želite li na svoju web stranicu uključiti i proizvod donacije."
 
-#: donate-product-host.php:291
+#: donate-product-host.php:296
 msgid "Campaign with this name already exists for this client domain!"
 msgstr "Kampanja s tim imenom već postoji za tu klijentsku domenu!"
 
-#: donate-product-host.php:345
+#: donate-product-host.php:350
 msgid "Client and campaign added successfully!"
 msgstr "Klijent i kampanja su uspješno dodani!"
 
-#: donate-product-host.php:351
+#: donate-product-host.php:356
 msgid "Invalid Product ID!"
 msgstr "Nevalidni ID proizvoda!"
 
-#: donate-product-host.php:364 donate-product-host.php:433
+#: donate-product-host.php:369 donate-product-host.php:438
+#: donate-product-host.php:594
 msgid "Campaign Name"
 msgstr "Naslov kampanje"
 
-#: donate-product-host.php:365
+#: donate-product-host.php:370
 msgid ""
 "Set a campaign title to display on the donor page instead of your actual "
 "product name. The title is associated with the customer's domain and cannot "
@@ -228,7 +233,7 @@ msgstr ""
 "domenom i ne može se koristiti više puta za istu domenu. Ali isti naslov se "
 "može koristiti za različite domene."
 
-#: donate-product-host.php:365
+#: donate-product-host.php:370
 msgid ""
 "For example, you donate a product \"low-stemmed plant\" and the title of the "
 "campaign can be \"Landscaping for a kindergarten\". Or you donate a "
@@ -239,11 +244,12 @@ msgstr ""
 "„Uređenje okoliša za dječji vrtić“. Ili donirate proizvod \"Sokovnik\", a "
 "naziv akcije može biti \"Opremimo kuhinju za školu\"."
 
-#: donate-product-host.php:368 donate-product-host.php:434
+#: donate-product-host.php:373 donate-product-host.php:439
+#: donate-product-host.php:595
 msgid "Client Domain"
 msgstr "Klijentska domena"
 
-#: donate-product-host.php:369
+#: donate-product-host.php:374
 msgid ""
 "Enter the domain of the donor site that should show the donation product to "
 "its site. Set it to example.com format."
@@ -251,94 +257,106 @@ msgstr ""
 "Unesite domenu donatorske stranice koja bi trebala preuzeti proizvod "
 "donacije na svoju stranicu. Postavite ga u formatu example.com ."
 
-#: donate-product-host.php:372 donate-product-host.php:435
+#: donate-product-host.php:377 donate-product-host.php:440
+#: donate-product-host.php:596
 msgid "Client Email"
 msgstr "Email klijenta"
 
-#: donate-product-host.php:373
+#: donate-product-host.php:378
 msgid "Set up a customer email to contact for the relevant campaign."
 msgstr "Postavite e-poštu klijenta za kontakt za relevantnu kampanju."
 
-#: donate-product-host.php:376 donate-product-host.php:436
+#: donate-product-host.php:381 donate-product-host.php:441
+#: donate-product-host.php:597
 msgid "Product ID"
 msgstr "ID proizvoda"
 
-#: donate-product-host.php:377
+#: donate-product-host.php:382
 msgid "Enter the ID of the product you intend to donate through this campaign."
 msgstr "Unesite ID proizvoda koji namjeravate donirati kroz ovu kampanju."
 
-#: donate-product-host.php:380 donate-product-host.php:438
+#: donate-product-host.php:385
 msgid "Required Quantity"
 msgstr "Potrebna količina"
 
-#: donate-product-host.php:381
+#: donate-product-host.php:386
 msgid "Enter the amount of donated products after which the campaign will end."
 msgstr "Unesite iznos doniranih proizvoda nakon kojeg će kampanja završiti."
 
-#: donate-product-host.php:384
+#: donate-product-host.php:389
 msgid "Add Campaign"
 msgstr "Dodaj kampanju"
 
-#: donate-product-host.php:408
+#: donate-product-host.php:413
 msgid "Settings saved successfully!"
 msgstr "Postavke su uspješno sačuvane!"
 
-#: donate-product-host.php:414
+#: donate-product-host.php:419
 msgid "Settings not saved."
 msgstr "Postavke nisu sačuvane."
 
-#: donate-product-host.php:437
+#: donate-product-host.php:442 donate-product-host.php:598
 msgid "Product Price"
 msgstr "Cijena proizvoda"
 
-#: donate-product-host.php:439
-msgid "Donated Quantity"
-msgstr "Donirana količina"
+#: donate-product-host.php:443 donate-product-host.php:599
+msgid "Required Qty."
+msgstr "Potrebna kol."
 
-#: donate-product-host.php:440
+#: donate-product-host.php:444 donate-product-host.php:600
+msgid "Donated Qty."
+msgstr "Donirana kol."
+
+#: donate-product-host.php:445 donate-product-host.php:601
 msgid "Total Amount"
 msgstr "Ukupna vrijednost"
 
-#: donate-product-host.php:441
+#: donate-product-host.php:446 donate-product-host.php:602
 msgid "Start Date"
 msgstr "Dautm početka"
 
-#: donate-product-host.php:442
+#: donate-product-host.php:447
 msgid "Client key"
 msgstr "Klijentski ključ"
 
-#: donate-product-host.php:460
+#: donate-product-host.php:448 donate-product-host.php:603
+msgid "Actions"
+msgstr "Akcije"
+
+#: donate-product-host.php:464
 msgid "Copy"
 msgstr "Kopiraj"
 
-#: donate-product-host.php:461
+#: donate-product-host.php:465
 msgid "Send"
 msgstr "Pošalji"
 
-#: donate-product-host.php:468
+#: donate-product-host.php:473
 msgid "No campaigns found."
 msgstr "Nema pronađenih kampanja."
 
-#: donate-product-host.php:478
-msgid "Client key copied to clipboard"
-msgstr "Klijentski ključ je kopiran u memoriju"
-
-#: donate-product-host.php:480
-msgid "Failed to copy client key"
-msgstr "Nije uspjelo kopiranje klijentskog ključa"
-
-#: donate-product-host.php:514
+#: donate-product-host.php:567
 msgid "Message from "
 msgstr "Poruka od "
 
-#: donate-product-host.php:515
+#: donate-product-host.php:568
 msgid "This is your Client key: "
 msgstr "Ovo je vaš klijentski ključ: "
 
-#: donate-product-host.php:519
+#: donate-product-host.php:575
 msgid "Email sent successfully"
 msgstr "Poruka je uspješno poslana"
 
-#: donate-product-host.php:521
+#: donate-product-host.php:577
 msgid "Failed to send email"
 msgstr "Nije uspjelo slanje poruke"
+
+#: donate-product-host.php:624
+msgid "No archived campaigns found."
+msgstr "Nema pronađenih arhiviranih kampanja."
+
+#~ msgid "Client key copied to clipboard"
+#~ msgstr "Klijentski ključ je kopiran u memoriju"
+
+#~ msgid "Failed to copy client key"
+#~ msgstr "Nije uspjelo kopiranje klijentskog ključa"
