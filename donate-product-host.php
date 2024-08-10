@@ -432,18 +432,18 @@ function dph_view_campaigns_page() {
 
     if ($campaigns) {
         echo '<p>&nbsp;</p>';
-        echo '<table class="wp-list-table widefat fixed striped" id="campaignsTable">';
+        echo '<table class="wp-list-table widefat fixed striped" id="campaignsTable" style="table-layout: auto;">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9660;</a></th>';
-        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9660;</a></th>';
-        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9660;</a></th>';
-        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9660;</a></th>';
-        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9660;</a></th>';
-        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9660;</a></th>';
-        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9660;</a></th>';
-        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9660;</a></th>';
-        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9660;</a></th>';
+        echo '<th>' . __('Campaign Name', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-0">&#9660;</a></th>';
+        echo '<th>' . __('Client Domain', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-1">&#9660;</a></th>';
+        echo '<th>' . __('Client Email', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-2">&#9660;</a></th>';
+        echo '<th>' . __('Product ID', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-3">&#9660;</a></th>';
+        echo '<th>' . __('Product Price', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-4">&#9660;</a></th>';
+        echo '<th>' . __('Required Qty.', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-5">&#9660;</a></th>';
+        echo '<th>' . __('Donated Qty.', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-6">&#9660;</a></th>';
+        echo '<th>' . __('Total Amount', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-7">&#9660;</a></th>';
+        echo '<th>' . __('Start Date', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-8">&#9660;</a></th>';
         echo '<th>' . __('Client key', 'donate-product-host') . '</th>';
         echo '<th>' . __('Actions', 'donate-product-host') . '</th>';
         echo '</tr>';
@@ -588,18 +588,18 @@ function dph_archived_campaigns_page() {
 
     if ($campaigns) {
         echo '<p>&nbsp;</p>';
-        echo '<table class="wp-list-table widefat fixed striped" id="archivedCampaignsTable">';
+        echo '<table class="wp-list-table widefat fixed striped" id="archivedCampaignsTable" style="table-layout: auto;">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th>' . __('Campaign Name', 'donate-product-host') . ' <a href="#" id="sort-0">&#9660;</a></th>';
-        echo '<th>' . __('Client Domain', 'donate-product-host') . ' <a href="#" id="sort-1">&#9660;</a></th>';
-        echo '<th>' . __('Client Email', 'donate-product-host') . ' <a href="#" id="sort-2">&#9660;</a></th>';
-        echo '<th>' . __('Product ID', 'donate-product-host') . ' <a href="#" id="sort-3">&#9660;</a></th>';
-        echo '<th>' . __('Product Price', 'donate-product-host') . ' <a href="#" id="sort-4">&#9660;</a></th>';
-        echo '<th>' . __('Required Qty.', 'donate-product-host') . ' <a href="#" id="sort-5">&#9660;</a></th>';
-        echo '<th>' . __('Donated Qty.', 'donate-product-host') . ' <a href="#" id="sort-6">&#9660;</a></th>';
-        echo '<th>' . __('Total Amount', 'donate-product-host') . ' <a href="#" id="sort-7">&#9660;</a></th>';
-        echo '<th>' . __('Start Date', 'donate-product-host') . ' <a href="#" id="sort-8">&#9660;</a></th>';
+        echo '<th>' . __('Campaign Name', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-0">&#9660;</a></th>';
+        echo '<th>' . __('Client Domain', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-1">&#9660;</a></th>';
+        echo '<th>' . __('Client Email', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-2">&#9660;</a></th>';
+        echo '<th>' . __('Product ID', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-3">&#9660;</a></th>';
+        echo '<th>' . __('Product Price', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-4">&#9660;</a></th>';
+        echo '<th>' . __('Required Qty.', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-5">&#9660;</a></th>';
+        echo '<th>' . __('Donated Qty.', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-6">&#9660;</a></th>';
+        echo '<th>' . __('Total Amount', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-7">&#9660;</a></th>';
+        echo '<th>' . __('Start Date', 'donate-product-host') . '&nbsp;&nbsp;<a href="#" id="sort-8">&#9660;</a></th>';
         echo '<th>' . __('Actions', 'donate-product-host') . '</th>';
         echo '</tr>';
         echo '</thead>';
