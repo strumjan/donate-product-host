@@ -880,8 +880,8 @@ add_action('admin_enqueue_scripts', 'dph_enqueue_admin_scripts');
 
 function dph_enqueue_admin_scripts($hook_suffix) {
     // Вчитување на JavaScript за функционалност во админ панелот
-    wp_enqueue_script('dph_donation_product_ajax', plugins_url('/dph-donation-product-ajax.js', __FILE__), array('jquery'), null, true);
-    wp_set_script_translations('dph_donation_product_ajax', 'donate-product-host', plugin_dir_path( __FILE__ ) . 'languages');
+    wp_enqueue_script('dph-donation-product-ajax', plugins_url('/dph-donation-product-ajax.js', __FILE__), array('jquery'), null, true);
+    wp_set_script_translations('dph-donation-product-ajax', 'donate-product-host', plugin_dir_path( __FILE__ ) . 'languages');
 }
 
 // Enqueue the script for adding donation product price in total
