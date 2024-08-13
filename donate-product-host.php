@@ -54,7 +54,7 @@ function dph_create_table() {
         required_quantity mediumint(9) NOT NULL,
         donated_quantity mediumint(9) DEFAULT 0,
         total_amount decimal(10, 2) DEFAULT 0.00,
-        start_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        start_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
         client_key text NOT NULL,
         campaign_archive tinyint(1) DEFAULT 0,
         PRIMARY KEY  (id)
@@ -324,6 +324,7 @@ function dph_add_campaign_page() {
                     'required_quantity' => $required_quantity,
                     'host_email' => $host_email,
                     'host_checkout_page' => $host_checkout_page,
+                    'campaign_archive' => 0,
                 ];
 
                 $client_domain_filename = str_replace('.', '_', $client_domain);
