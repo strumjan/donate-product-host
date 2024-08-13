@@ -262,6 +262,79 @@ function dph_admin_script() {
 }
 add_action('admin_footer', 'dph_admin_script');
 
+// Creating JSON file
+function dph_create_json_file($campaign_name, $product_id, $product_price, $required_quantity, $host_email, $host_checkout_page, $client_domain, $client_key, $campaign_archive = 0) {
+    $json_data = [
+        'campaign_name' => $campaign_name,
+        'product_id' => $product_id,
+        'product_price' => $product_price,
+        'required_quantity' => $required_quantity,
+        'host_email' => $host_email,
+        'host_checkout_page' => $host_checkout_page,
+        'campaign_archive' => $campaign_archive,
+    ];
+    $client_domain_filename = str_replace('.', '_', $client_domain);
+    list($header, $payload, $signature) = explode('.', $client_key);
+    $client_key_short = substr($signature, 0, 8);
+    $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
+
+    $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
+    if (!file_exists($campaigns_folder)) {
+        mkdir($campaigns_folder, 0755, true);
+    }
+
+    $json_file_path = $campaigns_folder . '/' . $json_filename;
+    file_put_contents($json_file_path, json_encode($json_data));
+
+    return $json_file_path;
+}
+
+// Generate client key
+function dph_generate_client_jwt($client_domain, $campaign_name, $secret_key) {
+    $payload_key = dph_generate_client_key($client_domain);
+    $payload = array(
+        'campaign_name' => $campaign_name,
+        'payload_key' => $payload_key,
+        'client_domain' => $client_domain
+    );
+    return dph_generate_jwt($payload, $secret_key);
+}
+
+// Update json status for campaign archive
+function dph_update_campaign_archive_status($client_domain, $client_key, $new_status) {
+    // Го претвораме доменот во формат за фајлови
+    $client_domain_filename = str_replace('.', '_', $client_domain);
+    
+    // Го добиваме краткиот клуч од JWT
+    list($header, $payload, $signature) = explode('.', $client_key);
+    $client_key_short = substr($signature, 0, 8);
+
+    // Креираме име на фајлот
+    $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
+
+    // Патека до фајлот
+    $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
+    $json_file_path = $campaigns_folder . '/' . $json_filename;
+
+    // Прво проверуваме дали фајлот постои
+    if (file_exists($json_file_path)) {
+        // Го читаме JSON фајлот
+        $json_data = json_decode(file_get_contents($json_file_path), true);
+        
+        // Го менуваме параметарот campaign_archive
+        $json_data['campaign_archive'] = $new_status;
+
+        // Го зачувуваме фајлот назад
+        file_put_contents($json_file_path, json_encode($json_data));
+
+        return true;
+    } else {
+        // Ако фајлот не постои, враќаме false
+        return false;
+    }
+}
+
+
 // Function to display add campaign form
 function dph_add_campaign_page() {
     global $wpdb;
@@ -274,12 +347,6 @@ function dph_add_campaign_page() {
         $product_id = intval($_POST['product_id']);
         $product = wc_get_product($product_id);
         $secret_key = get_option('dph_secret_key');
-        $payload_key = dph_generate_client_key($client_domain);
-        $payload = array(
-            'campaign_name' => $campaign_name,
-            'payload_key' => $payload_key,
-            'client_domain' => $client_domain
-        );
 
         // Check if the client_domain and campaign_name already exist
         $existing_campaign = $wpdb->get_var(
@@ -299,7 +366,7 @@ function dph_add_campaign_page() {
             if ($product) {
                 $product_price = $product->get_price();
                 $required_quantity = intval($_POST['required_quantity']);
-                $client_key = dph_generate_jwt($payload, $secret_key);
+                $client_key = dph_generate_client_jwt($client_domain, $campaign_name, $secret_key);
                 $host_email = get_option('dph_host_email');
                 $host_checkout_page = wc_get_checkout_url().'?add-to-cart=';
 
@@ -317,33 +384,7 @@ function dph_add_campaign_page() {
                 );
 
                 // Create JSON file for the client
-                $json_data = [
-                    'campaign_name' => $campaign_name,
-                    'product_id' => $product_id,
-                    'product_price' => $product_price,
-                    'required_quantity' => $required_quantity,
-                    'host_email' => $host_email,
-                    'host_checkout_page' => $host_checkout_page,
-                    'campaign_archive' => 0,
-                ];
-
-                $client_domain_filename = str_replace('.', '_', $client_domain);
-                // Split the JWT into its three parts
-                list($header, $payload, $signature) = explode('.', $client_key);
-
-                // Get the first 8 characters of the signature directly
-                $client_key_short = substr($signature, 0, 8);
-
-                $json_filename = "{$client_domain_filename}_{$client_key_short}.json";
-
-                // Define the path to the campaigns folder
-                $campaigns_folder = plugin_dir_path(__FILE__) . 'campaigns';
-                if (!file_exists($campaigns_folder)) {
-                    mkdir($campaigns_folder, 0755, true);
-                }
-
-                $json_file_path = $campaigns_folder . '/' . $json_filename;
-                file_put_contents($json_file_path, json_encode($json_data));
+                dph_create_json_file($campaign_name, $product_id, $product_price, $required_quantity, $host_email, $host_checkout_page, $client_domain, $client_key);
 
                 // Add success notice
                 $_SESSION['dph_admin_notices'] = [
@@ -683,10 +724,15 @@ add_action('wp_ajax_unarchive_campaign', 'dph_unarchive_campaign');
 
 function dph_archive_campaign() {
     global $wpdb;
-    $campaign_id = intval($_POST['campaign_id']);
+    $campaign_id = intval($_POST['campaign_id']);    
 
     // Архивирај ја кампањата
     $table_name = $wpdb->prefix . 'dph_clients';
+
+    $campaign = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $campaign_id");
+    $client_domain = $campaign->client_domain;
+    $client_key = $campaign->client_key;
+
     $result = $wpdb->update(
         $table_name,
         array('campaign_archive' => 1), // Сетирај ја колоната на 1
@@ -696,6 +742,7 @@ function dph_archive_campaign() {
     );
 
     if ($result !== false) {
+        dph_update_campaign_archive_status($client_domain, $client_key, 1);
         wp_send_json_success('Campaign archived successfully.');
     } else {
         wp_send_json_error('Failed to archive the campaign.');
@@ -709,6 +756,11 @@ function dph_unarchive_campaign() {
 
     // Одархивирај ја кампањата
     $table_name = $wpdb->prefix . 'dph_clients';
+
+    $campaign = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $campaign_id");
+    $client_domain = $campaign->client_domain;
+    $client_key = $campaign->client_key;
+
     $result = $wpdb->update(
         $table_name,
         array('campaign_archive' => 0), // Сетирај ја колоната на 0
@@ -718,6 +770,7 @@ function dph_unarchive_campaign() {
     );
 
     if ($result !== false) {
+        dph_update_campaign_archive_status($client_domain, $client_key, 0);
         wp_send_json_success('Campaign unarchived successfully.');
     } else {
         wp_send_json_error('Failed to unarchive the campaign.');
