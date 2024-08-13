@@ -726,7 +726,6 @@ function dph_archive_campaign() {
     global $wpdb;
     $campaign_id = intval($_POST['campaign_id']);    
 
-    // Архивирај ја кампањата
     $table_name = $wpdb->prefix . 'dph_clients';
 
     $campaign = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $campaign_id");
@@ -735,7 +734,7 @@ function dph_archive_campaign() {
 
     $result = $wpdb->update(
         $table_name,
-        array('campaign_archive' => 1), // Сетирај ја колоната на 1
+        array('campaign_archive' => 1), 
         array('id' => $campaign_id),
         array('%d'),
         array('%d')
@@ -754,7 +753,6 @@ function dph_unarchive_campaign() {
     global $wpdb;
     $campaign_id = intval($_POST['campaign_id']);
 
-    // Одархивирај ја кампањата
     $table_name = $wpdb->prefix . 'dph_clients';
 
     $campaign = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $campaign_id");
@@ -763,7 +761,7 @@ function dph_unarchive_campaign() {
 
     $result = $wpdb->update(
         $table_name,
-        array('campaign_archive' => 0), // Сетирај ја колоната на 0
+        array('campaign_archive' => 0), 
         array('id' => $campaign_id),
         array('%d'),
         array('%d')
@@ -789,7 +787,7 @@ function dph_verify_jwt($jwt, $secret_key) {
         $decoded = JWT::decode($jwt, new Key($secret_key, 'HS256'));
         return (array) $decoded;
     } catch (Exception $e) {
-        //error_log('JWT verification failed: ' . $e->getMessage());
+
         return false;
     }
 }
@@ -806,7 +804,7 @@ add_action('rest_api_init', function () {
 
 // Callback function to update the quantity
 function dph_update_campaign_quantity(WP_REST_Request $request) {
-    //error_log("dph_update_campaign_quantity executed.");
+
     global $wpdb;
     $params = $request->get_json_params();
     $secret_key = get_option('dph_secret_key');
@@ -814,7 +812,6 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
     $jwt_token = str_replace('Bearer ', '', $jwt_token);
 
     if (!dph_verify_jwt($jwt_token, $secret_key)) {
-        //error_log("Invalid JWT token.");
         return new WP_Error('invalid_token', 'Invalid JWT token', array('status' => 401));
     }
 
@@ -828,27 +825,20 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
         $campaign_name
     );
     $client_key = $wpdb->get_var($query);//error_log('Ova e od bazata: '.$client_key);
-    //$client_key = sanitize_text_field($params['client_key']);
+
     $donated_quantity = intval($params['donated_quantity']);
-    // Split the JWT into its three parts
+
     list($header, $payload, $signature) = explode('.', $client_key);
 
-    // Get the first 8 characters of the signature directly
     $client_key_short = substr($signature, 0, 8);
-    // Читање на `required_quantity`
-    //$required_quantity = $wpdb->get_var($wpdb->prepare( 
-      //  "SELECT required_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
-      //  $client_domain_base,
-      //  $campaign_name
-    //));
+
     $required_quantity = intval($params['required_quantity']);
     $old_donated_quantity = $wpdb->get_var($wpdb->prepare( 
         "SELECT donated_quantity FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
         $client_domain_base,
         $campaign_name
     ));
-    //error_log("Old Donated Quantiy e: ".$old_donated_quantity);
-    //error_log('Requires Quantity e: '.$required_quantity);
+
     $product_price = floatval($wpdb->get_var($wpdb->prepare( 
         "SELECT product_price FROM $table_name WHERE client_domain = %s AND campaign_name = %s",
         $client_domain_base,
@@ -858,35 +848,38 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
     $file_path = plugin_dir_path(__FILE__) . "campaigns/{$client_domain}_{$client_key_short}.json";
 
     if (!file_exists($file_path)) {
-        //error_log("Campaign file not found: " . $file_path);
         return new WP_Error('file_not_found', 'Campaign file not found', array('status' => 404));
     }
 
     $campaign_data = json_decode(file_get_contents($file_path), true);
 
     if ($campaign_data === null) {
-        //error_log("Invalid JSON file: " . $file_path);
+
         return new WP_Error('invalid_json', 'Invalid JSON file', array('status' => 500));
     }
 
     // Ажурирање на базата
     if ($required_quantity !== null) {
-        //if ($old_donated_quantity === '0') {
-          //  $new_donated_quantity = $required_quantity - $donated_quantity;
-        //} else {
-        //    $new_donated_quantity = $old_donated_quantity - $donated_quantity;
-        //}
+
         $new_donated_quantity = $old_donated_quantity + $donated_quantity;
         $quantity_difference = $required_quantity - $donated_quantity;
         //$total_amount = floatval($quantity_difference * $product_price);
         $total_amount = floatval($new_donated_quantity * $product_price);
         $total_amount_formatted = number_format($total_amount, 2, '.', '');
+
+        $campaign_archive = 0;
+        if ($quantity_difference <= 0) {
+            $quantity_difference = 0; 
+            $campaign_archive = 1; 
+        }
+
         $wpdb->update(
             $table_name,
             array(
                 'donated_quantity' => $new_donated_quantity,
                 'total_amount' => $total_amount_formatted,
-                'required_quantity' => $quantity_difference
+                'required_quantity' => $quantity_difference,
+                'campaign_archive' => $campaign_archive
             ),
             array(
                 'client_domain' => $client_domain_base,
@@ -898,9 +891,10 @@ function dph_update_campaign_quantity(WP_REST_Request $request) {
     }
 
     $campaign_data['required_quantity'] = max(0, intval($campaign_data['required_quantity']) - $donated_quantity);
+    if ($campaign_data['required_quantity'] === 0) {
+        $campaign_data['campaign_archive'] = 1;
+    }
     file_put_contents($file_path, json_encode($campaign_data));
-
-    //error_log("Quantity updated successfully for " . $client_domain . "_" . $client_key);
 
     return rest_ensure_response(array('success' => true, 'new_required_quantity' => $campaign_data['required_quantity']));
 
